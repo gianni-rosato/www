@@ -1,0 +1,10 @@
+<div class="image-container">
+  <picture>
+    <img
+      src="{{ get_url(path=src) }}"
+      width="{{ width | default(value="") }}"
+      height="{{ height | default(value="") }}"
+      alt="{{ alt | default(value="") }}"
+    />
+  </picture>
+</div>

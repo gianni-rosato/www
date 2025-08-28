@@ -1,0 +1,7 @@
+<picture>
+  <source srcset="{{ get_url(path=src) }}" type="image/{{ type | default(value=jxl) }}" />
+  <img
+      src="{{ get_url(path=fb) }}"
+      loading="lazy"
+  />
+</picture>

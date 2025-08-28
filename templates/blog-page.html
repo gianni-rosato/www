@@ -1,0 +1,24 @@
+{% extends "base.html" %} {% block content %}
+<article class="blog-post">
+  <header class="blog-post-header">
+    <div class="blog-post-meta">
+      <time>{{ page.date | date(format="%B %d, %Y")}}</time>
+      <span class="author">Gianni Rosato</span>
+    </div>
+    <div class="nav-buttons">
+      <a href="{{ get_url(path='@/blog/_index.md') }}" class="pill-btn">Back</a>
+      <a href="{{ get_url(path='@/_index.md') }}" class="pill-btn">Home</a>
+    </div>
+    <h1 class="blog-post-title">
+      {{ page.title }}
+    </h1>
+  </header>
+
+  <div class="blog-post-content">
+    {{ page.content | safe }}
+    <div class="blog-post-foot">
+      &copy; {{ now() | date(format="%Y") }} Gianni Rosato. All Rights Reserved.
+    </div>
+  </div>
+</article>
+{% endblock content %}

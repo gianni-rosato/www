@@ -1,0 +1,28 @@
+{% extends "base.html" %} {% block content %}
+<h1 class="blog-title">
+  {{ section.title }}
+</h1>
+<div class="home-nav-buttons">
+  <a href="{{ get_url(path='@/_index.md') }}" class="pill-btn">Home</a>
+  <a href="mailto:giannirosato@proton.me" class="pill-btn">Email</a>
+  <a href="{{ get_url(path='@/gallery/_index.md') }}" class="pill-btn">Gallery</a>
+</div>
+<ul>
+  <section class="blog-posts">
+    {% for page in section.pages %}
+    <article class="blog-post-card">
+      <a
+        href="{{ page.permalink | safe }}"
+        class="blog-post-link"
+      >
+        <div class="blog-post-date">
+          {{ page.date | date(format="%B %d, %Y")}}
+        </div>
+        <h2>{{ page.title }}</h2>
+        <p>{{ page.summary | safe }}</p>
+      </a>
+    </article>
+    {% endfor %}
+  </section>
+</ul>
+{% endblock content %}

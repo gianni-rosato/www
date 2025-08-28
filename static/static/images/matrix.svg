@@ -1,0 +1,11 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="22"
+  height="22"
+  viewBox="0 0 40 40"
+>
+  <path
+    d="M5.93 0a4.7 5 0 0 0-4.7 5v22.5a4.7 5 0 0 0 4.7 5h7.03v6.25c0 .48.25.9.65 1.12a1.19 1.27 0 0 0 1.23-.12l9.07-7.25h10.16a4.7 5 0 0 0 4.7-5V5a4.7 5 0 0 0-4.7-5Z"
+    style="fill: oklch(0.65 0 0); fill-opacity: 1; stroke-width: 0.0756764"
+  />
+</svg>

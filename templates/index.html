@@ -1,0 +1,289 @@
+{% extends "base.html" %} {% block content %}
+<div class="home">
+    {{ section.content | safe }}
+    <div class="home-nav-buttons">
+      <a href="{{ get_url(path='@/blog/_index.md') }}" class="pill-btn">Blog</a>
+      <a href="mailto:giannirosato@proton.me" class="pill-btn">Email</a>
+      <a href="{{ get_url(path='@/gallery/_index.md') }}" class="pill-btn">Gallery</a>
+    </div>
+    <!-- social icons -->
+    <div class="social-container">
+      <a href="https://www.linkedin.com/in/gianni-r-52487124b/" target="_blank">
+        <img src="/static/images/linkedin.svg" alt="LinkedIn Icon" />
+      </a>
+      <a href="https://disobey.net/@gianni" target="_blank">
+        <img src="/static/images/mastodon.svg" alt="Mastodon Icon" />
+      </a>
+      <a href="https://bsky.app/profile/giannirosato.com" target="_blank">
+        <img src="/static/images/bsky.svg" alt="Bluesky Icon" />
+      </a>
+      <a href="https://discord.gg/bbQD5MjDr3" target="_blank">
+        <img src="/static/images/discord.svg" alt="Discord Icon" />
+      </a>
+      <a href="https://matrix.to/#/@computerbustr:matrix.org" target="_blank">
+        <img src="/static/images/matrix.svg" alt="Matrix Icon" />
+      </a>
+      <a href="https://github.com/gianni-rosato" target="_blank">
+        <img src="/static/images/github.svg" alt="GitHub Icon" />
+      </a>
+      <a href="https://kernel.org/" target="_blank">
+        <img src="/static/images/tux.svg" alt="Linux Icon" />
+      </a>
+    </div>
+    <!-- 88x31 -->
+    <div class="footer">
+      <a href="https://giannirosato.com" target="_blank">
+        <picture>
+          <source
+            srcset="/static/images/88x31/gb82_88x31.jxl"
+            type="image/jxl"
+          />
+          <img
+            src="/static/images/88x31/gb82_88x31.webp"
+            alt="me"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://hayl.in/" target="_blank">
+        <picture>
+          <img
+            src="/static/images/88x31/haylin.webp"
+            alt="haylin"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://jordane.day/" target="_blank">
+        <picture>
+          <img
+            src="/static/images/88x31/jordan.webp"
+            alt="jordan"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://holliger.me/" target="_blank">
+        <picture>
+          <source
+            srcset="/static/images/88x31/lukas.jxl"
+            type="image/jxl"
+          />
+          <img
+            src="/static/images/88x31/lukas.webp"
+            alt="lukas"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://kernel.org/" target="_blank">
+        <picture>
+          <img
+            src="/static/images/88x31/penguins.webp"
+            alt="linux"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://varun.ch/" target="_blank">
+        <picture>
+          <source srcset="/static/images/88x31/varun.ch.jxl" type="image/jxl" />
+          <img
+            src="/static/images/88x31/varun.ch.webp"
+            alt="varun"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://www.apple.com/mac/" target="_blank">
+        <picture>
+          <source srcset="/static/images/88x31/mac.jxl" type="image/jxl" />
+          <img
+            src="/static/images/88x31/mac.webp"
+            alt="mac"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://svt-av1-psy.com/" target="_blank">
+        <picture>
+          <source
+            srcset="/static/images/88x31/psy_88x31.jxl"
+            type="image/jxl"
+          />
+          <img
+            src="/static/images/88x31/psy_88x31.webp"
+            alt="svt-av1-psy"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://github.com/gianni-rosato" target="_blank">
+        <picture>
+          <source srcset="/static/images/88x31/github.jxl" type="image/jxl" />
+          <img
+            src="/static/images/88x31/github.webp"
+            alt="github"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://ziglang.org/" target="_blank">
+        <picture>
+          <source srcset="/static/images/88x31/ziglang.jxl" type="image/jxl" />
+          <img
+            src="/static/images/88x31/ziglang.webp"
+            alt="ziglang"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://matrix.to/#/@computerbustr:matrix.org" target="_blank">
+        <picture>
+          <source srcset="/static/images/88x31/matrix.jxl" type="image/jxl" />
+          <img
+            src="/static/images/88x31/matrix.webp"
+            alt="matrix"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://ezri.pet/" target="_blank">
+        <picture>
+          <source srcset="/static/images/88x31/ezri.jxl" type="image/jxl" />
+          <img
+            src="/static/images/88x31/ezri.webp"
+            alt="ezri"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://sewergirl.neocities.org/" target="_blank">
+        <picture>
+          <img
+            src="/static/images/88x31/renata.webp"
+            alt="renata"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://zed.dev/" target="_blank">
+        <picture>
+          <source srcset="/static/images/88x31/zed.jxl" type="image/jxl" />
+          <img
+            src="/static/images/88x31/zed.webp"
+            alt="ezri"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://jpegxl.info/" target="_blank">
+        <picture>
+          <source srcset="/static/images/88x31/jpegxl.jxl" type="image/jxl" />
+          <img
+            src="/static/images/88x31/jpegxl.webp"
+            alt="JPEG XL"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://archlinux.org/" target="_blank">
+        <picture>
+          <source
+            srcset="/static/images/88x31/archlinux.jxl"
+            type="image/jxl"
+          />
+          <img
+            src="/static/images/88x31/archlinux.webp"
+            alt="arch"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://disobey.net/@gianni" target="_blank">
+        <picture>
+          <img
+            src="/static/images/88x31/fediverse.webp"
+            alt="fedi"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://wiki.x266.mov/" target="_blank">
+        <picture>
+          <source
+            srcset="/static/images/88x31/codecwiki.jxl"
+            type="image/jxl"
+          />
+          <img
+            src="/static/images/88x31/codecwiki.webp"
+            alt="Codec Wiki"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://www.waterfox.net/" target="_blank">
+        <picture>
+          <source srcset="/static/images/88x31/waterfox.jxl" type="image/jxl" />
+          <img
+            src="/static/images/88x31/waterfox.webp"
+            alt="Codec Wiki"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://eightyeightthirty.one/" target="_blank">
+        <picture>
+          <source srcset="/static/images/88x31/88x31.jxl" type="image/jxl" />
+          <img
+            src="/static/images/88x31/88x31.webp"
+            alt="Codec Wiki"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://bsky.app/profile/giannirosato.com" target="_blank">
+        <picture>
+          <source srcset="/static/images/88x31/bluesky.jxl" type="image/jxl" />
+          <img
+            src="/static/images/88x31/bluesky.webp"
+            alt="Bluesky"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+      <a href="https://samranda.com/" target="_blank">
+        <picture>
+          <source srcset="/static/images/88x31/samranda.jxl" type="image/jxl" />
+          <img
+            src="/static/images/88x31/samranda.webp"
+            alt="sam randa"
+            width="88"
+            height="31"
+          />
+        </picture>
+      </a>
+    </div>
+</div>
+{% endblock content %}

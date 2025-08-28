@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <base target="_self" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script
+      defer
+      src="https://cloud.umami.is/script.js"
+      data-website-id="ed9fd2cd-67dd-4524-ad11-1810fb677e29"
+    ></script>
+    <link href="{{ get_url(path='main.css') }}" rel="stylesheet" />
+    <link href="{{ get_url(path='blog.css') }}" rel="stylesheet" />
+    <link href="{{ get_url(path='code.css') }}" rel="stylesheet" />
+    <link href="{{ get_url(path='favicon.webp') }}" rel="icon">
+    <title>
+      {% if page %}{{ page.title }} | Gianni Rosato{% elif section %}{{
+      section.title }} | Gianni Rosato{% else %}Gianni Rosato{% endif %}
+    </title>
+  </head>
+
+  <body>
+    <main>
+      <div class="container">
+        {% block content %} {% endblock content %}
+      </div>
+    </main>
+  </body>
+</html>

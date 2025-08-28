@@ -1,0 +1,31 @@
+pre {
+  padding: 1rem;
+  overflow: auto;
+  margin-bottom: 1rem;
+  border: 2px solid var(--darkgrey);
+  border-radius: 0.5rem;
+  line-height: 1.25rem;
+}
+pre * {
+  font-size: 0.875rem;
+  font-family: "Commit Mono";
+}
+pre[data-linenos] {
+  padding: 1rem 0;
+}
+pre table td {
+  padding: 0;
+}
+pre table td:nth-of-type(1) {
+  text-align: center;
+  vertical-align: top;
+  user-select: none;
+}
+pre mark {
+  display: block;
+  /* background-color: rgba(254, 252, 232, 0.9); */
+}
+pre table {
+  width: 100%;
+  border-collapse: collapse;
+}
