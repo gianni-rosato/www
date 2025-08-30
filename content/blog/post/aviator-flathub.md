@@ -1,6 +1,5 @@
 +++
 title = "Aviator 0.2.0"
-author = "Gianni Rosato"
 date = 2023-02-11
 +++
 

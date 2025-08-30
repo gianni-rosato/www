@@ -11,6 +11,7 @@ build_search_index = false
 generate_feeds = true
 feed_filenames = ["atom.xml"]
 title = "Gianni Rosato"
+author = "Gianni Rosato"
 description = "Hi, I'm Gianni. I build video & image compression technology for a more beautiful Internet."
 
 [markdown]

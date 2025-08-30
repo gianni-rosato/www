@@ -1,6 +1,5 @@
 +++
 title = "Better JPEG Encoding From Google"
-author = "Gianni Rosato"
 date = 2023-06-14
 +++
 

@@ -1,6 +1,5 @@
 +++
 title = "Comparing Video Encoders"
-author = "Gianni Rosato"
 date = 2025-03-15
 +++
 

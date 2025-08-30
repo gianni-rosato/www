@@ -1,6 +1,5 @@
 +++
 title = "Lossless Data Compression"
-author = "Gianni Rosato"
 date = 2023-10-02
 +++
 

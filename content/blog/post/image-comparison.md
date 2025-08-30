@@ -1,6 +1,5 @@
 +++
 title = "Image Codec Comparison"
-author = "Gianni Rosato"
 date = 2023-03-16
 +++
 
@@ -232,7 +231,7 @@ techniques to improve JPEG quality even further, especially at higher quality. I
 didn't even test jpegli with the superior XYB colorspace (as this proved hard to
 do), which to my eyes nets jpegli an even better quality improvement over
 standard jpeg encoders. There's a cool
-[Twitter thread](https://nitter.kitsuna.net/jyzg/status/1622900057816145922)
+[Twitter thread](https://nitter.poast.org/jyzg/status/1622900057816145922)
 about this. According to
 [Jyrki Alakuijala](https://research.google/people/105344/), "jpegli supports
 more than 8 bits per channel (around 10.5 bits) and can codify HDR dynamics

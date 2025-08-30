@@ -1,6 +1,5 @@
 +++
 title = "QOI Encoding in Zig"
-author = "Gianni Rosato"
 date = 2024-03-13
 +++
 

@@ -1,6 +1,5 @@
 +++
 title = "XYB JPEG"
-author = "Gianni Rosato"
 date = 2023-07-16
 +++
 

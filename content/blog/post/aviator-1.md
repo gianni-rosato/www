@@ -1,6 +1,5 @@
 +++
 title = "rAV1ator 1.0"
-author = "Gianni Rosato"
 date = 2023-02-08
 +++
 

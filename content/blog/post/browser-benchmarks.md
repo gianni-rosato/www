@@ -1,6 +1,5 @@
 +++
 title = "Browser Benchmarks"
-author = "Gianni Rosato"
 date = 2023-02-28
 +++
 

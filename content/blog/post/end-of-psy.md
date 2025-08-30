@@ -1,6 +1,5 @@
 +++
 title = "The End of SVT-AV1-PSY"
-author = "Gianni Rosato"
 date = 2024-11-26
 +++
 

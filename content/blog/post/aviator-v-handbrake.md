@@ -1,6 +1,5 @@
 +++
 title = "Aviator Versus Handbrake; Visual Quality Assessment"
-author = "Gianni Rosato"
 date = 2023-02-12
 +++
 

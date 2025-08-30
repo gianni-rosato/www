@@ -1,6 +1,5 @@
 +++
 title = "Photographic Corpus (lossy)"
-author = "Gianni Rosato"
 date = 2023-03-16
 +++
 

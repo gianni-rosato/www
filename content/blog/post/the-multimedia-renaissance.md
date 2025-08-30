@@ -1,6 +1,5 @@
 +++
 title = "The Multimedia Renaissance"
-author = "Gianni Rosato"
 date = 2025-08-18
 +++
 

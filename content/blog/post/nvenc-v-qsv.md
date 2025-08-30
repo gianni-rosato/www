@@ -1,6 +1,5 @@
 +++
 title = "Who Has the Best Hardware AV1 Encoder?"
-author = "Gianni Rosato"
 date = 2023-04-15
 +++
 
