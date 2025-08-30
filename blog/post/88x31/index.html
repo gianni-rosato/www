@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <base target="_self" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script
+      defer
+      src="https://cloud.umami.is/script.js"
+      data-website-id="ed9fd2cd-67dd-4524-ad11-1810fb677e29"
+    ></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="https://giannirosato.com/atom.xml">
+    <link href="https://giannirosato.com/main.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/blog.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/code.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/favicon.webp" rel="icon">
+    <title>
+      Stupidly Tiny Images | Gianni Rosato
+    </title>
+    <meta name="description" content="How tiny can very tiny banner images get?">
+    <meta property="og:type" content="article">
+  </head>
+
+  <body>
+    <main>
+      <div class="container">
+        
+<article class="blog-post">
+  <header class="blog-post-header">
+    <div class="blog-post-meta">
+      <time>October 07, 2024</time>
+      <span class="author">Gianni Rosato</span>
+    </div>
+    <div class="nav-buttons">
+      <a href="https://giannirosato.com/blog/" class="pill-btn">Back</a>
+      <a href="https://giannirosato.com/" class="pill-btn">Home</a>
+    </div>
+    <h1 class="blog-post-title">
+      Stupidly Tiny Images
+    </h1>
+  </header>
+
+  <div class="blog-post-content">
+    <p>How tiny can very tiny banner images get?</p>
+<span id="continue-reading"></span><h2 id="why">Why?</h2>
+<p>My friend <a href="https://hayl.in/">Haylin</a> introduced me to
+<a href="https://matdoes.dev/buttons">88x31 images</a> and I completely fell in love with
+them. She told me that this weekend I should add some to my site, so I ended up
+making a couple of custom ones and peering with friends on this site's home
+page. Fun times.</p>
+<p>However, there was a catch. It bothered me that these images were all PNGs and
+(<em>shudders</em>) GIFs straight out of the 1990s &amp; early 2000s. I get that's the
+aesthetic, but I don't think it is paramount that we stick with older formats.</p>
+<p>I've been involved in the multimedia compression scene donating my time as an
+AV1 framework and encoder developer for a bit now, and I'd consider myself to be
+somewhat well-versed in digital multimedia and data compression. Recently in the
+image compression space, I've been focused on
+<a href="https://svt-av1-psy.com/avif/">making lossy AVIF performant on larger, mostly photographic images</a>
+that you'd commonly find on the Web. The 88x31s are thus super far out of my
+comfort zone, so I was excited to see what I could accomplish with
+"off-the-shelf" tools in a day or two.</p>
+<h2 id="level-1-png">Level 1: PNG</h2>
+<p>The easiest question to ask ourselves here is <strong>"How can we make the existing
+88x31s smaller without any compromises whatsoever?"</strong></p>
+<p>The answer is simple: PNG optimization. PNG is (in my opinion) an extremely
+bloated spec compared to formats like <a href="https://qoiformat.org/">QOI</a> that achieve
+the same goals at much lower complexity. The benefit of this is that there is
+usually a lot of room for improvement in any standard PNG bitstream you
+encounter online.</p>
+<p>I'm going to ignore animated GIFs and APNG's for now and just look as still
+images - we can start with twelve 88x31s
+(<a href="https://files.catbox.moe/mbzslh.tzst">archive</a>) pulled straight from
+<a href="https://matdoes.dev/buttons">matdoes.dev/buttons</a>. We'll cover animations
+later.</p>
+<p>We have ourselves a combined dataset of GIFs and PNGs here.</p>
+<pre style="background-color:#000000;color:#ffffff;"><code><span style="color:#b4d3e2;">originals/9.png: 1339 bytes
+</span><span style="color:#b4d3e2;">originals/4.gif: 3058 bytes
+</span><span style="color:#b4d3e2;">originals/5.gif: 845 bytes
+</span><span style="color:#b4d3e2;">originals/7.gif: 2206 bytes
+</span><span style="color:#b4d3e2;">originals/12.png: 389 bytes
+</span><span style="color:#b4d3e2;">originals/3.gif: 1099 bytes
+</span><span style="color:#b4d3e2;">originals/linux_2.png: 1052 bytes
+</span><span style="color:#b4d3e2;">originals/6.png: 825 bytes
+</span><span style="color:#b4d3e2;">originals/firefox_now.gif: 2355 bytes
+</span><span style="color:#b4d3e2;">originals/linux_1.gif: 583 bytes
+</span><span style="color:#b4d3e2;">originals/11.gif: 667 bytes
+</span><span style="color:#b4d3e2;">originals/10.gif: 2523 bytes
+</span><span style="color:#b4d3e2;">Total size: 16941 bytes
+</span><span style="color:#b4d3e2;">Number of items: 12
+</span><span style="color:#b4d3e2;">Average size: 1411 bytes
+</span></code></pre>
+<p>We're weighing in at an average of 1411 bytes per image. That's not too bad, but
+we can do better even with the most basic, low-effort PNG encoding.</p>
+<p>Using <code>magick -quality 0</code> we can get some PNGs out of the static GIFs. Here's
+the effect on the filesize:</p>
+<pre style="background-color:#000000;color:#ffffff;"><code><span style="color:#b4d3e2;">png_unoptim/9.png: 1339 bytes
+</span><span style="color:#b4d3e2;">png_unoptim/12.png: 389 bytes
+</span><span style="color:#b4d3e2;">png_unoptim/linux_1.png: 721 bytes
+</span><span style="color:#b4d3e2;">png_unoptim/firefox_now.png: 2352 bytes
+</span><span style="color:#b4d3e2;">png_unoptim/11.png: 752 bytes
+</span><span style="color:#b4d3e2;">png_unoptim/linux_2.png: 1052 bytes
+</span><span style="color:#b4d3e2;">png_unoptim/10.png: 2458 bytes
+</span><span style="color:#b4d3e2;">png_unoptim/4.png: 3137 bytes
+</span><span style="color:#b4d3e2;">png_unoptim/5.png: 957 bytes
+</span><span style="color:#b4d3e2;">png_unoptim/7.png: 1621 bytes
+</span><span style="color:#b4d3e2;">png_unoptim/6.png: 825 bytes
+</span><span style="color:#b4d3e2;">png_unoptim/3.png: 1213 bytes
+</span><span style="color:#b4d3e2;">Total size: 16816 bytes
+</span><span style="color:#b4d3e2;">Number of items: 12
+</span><span style="color:#b4d3e2;">Average size: 1401 bytes
+</span></code></pre>
+<p>Even low effort, completely unoptimized PNG beats GIF here on average. GIF
+sucks, please don't use GIF.</p>
+<p>Now let's see what happens if we use <code>ect -9 --mt-deflate -strip</code> on the PNGs:</p>
+<pre style="background-color:#000000;color:#ffffff;"><code><span style="color:#b4d3e2;">png_ect9/9.png: 1326 bytes
+</span><span style="color:#b4d3e2;">png_ect9/12.png: 369 bytes
+</span><span style="color:#b4d3e2;">png_ect9/linux_1.png: 458 bytes
+</span><span style="color:#b4d3e2;">png_ect9/firefox_now.png: 2050 bytes
+</span><span style="color:#b4d3e2;">png_ect9/11.png: 495 bytes
+</span><span style="color:#b4d3e2;">png_ect9/linux_2.png: 1029 bytes
+</span><span style="color:#b4d3e2;">png_ect9/10.png: 2182 bytes
+</span><span style="color:#b4d3e2;">png_ect9/4.png: 2765 bytes
+</span><span style="color:#b4d3e2;">png_ect9/5.png: 706 bytes
+</span><span style="color:#b4d3e2;">png_ect9/7.png: 1316 bytes
+</span><span style="color:#b4d3e2;">png_ect9/6.png: 808 bytes
+</span><span style="color:#b4d3e2;">png_ect9/3.png: 1006 bytes
+</span><span style="color:#b4d3e2;">Total size: 14510 bytes
+</span><span style="color:#b4d3e2;">Number of items: 12
+</span><span style="color:#b4d3e2;">Average size: 1209 bytes
+</span></code></pre>
+<p>It doesn't seem like a crazy difference, but considering how little flexibility
+we have with such tiny images, it is pretty impressive that we're looking at the
+same exact format and the same image data.</p>
+<p>Let's take it a step further with <code>ect -9999 -strip</code>:</p>
+<pre style="background-color:#000000;color:#ffffff;"><code><span style="color:#b4d3e2;">png_ect9/9.png: 1324 bytes
+</span><span style="color:#b4d3e2;">png_ect9/12.png: 368 bytes
+</span><span style="color:#b4d3e2;">png_ect9/linux_1.png: 454 bytes
+</span><span style="color:#b4d3e2;">png_ect9/firefox_now.png: 2048 bytes
+</span><span style="color:#b4d3e2;">png_ect9/11.png: 492 bytes
+</span><span style="color:#b4d3e2;">png_ect9/linux_2.png: 1027 bytes
+</span><span style="color:#b4d3e2;">png_ect9/10.png: 2179 bytes
+</span><span style="color:#b4d3e2;">png_ect9/4.png: 2761 bytes
+</span><span style="color:#b4d3e2;">png_ect9/5.png: 706 bytes
+</span><span style="color:#b4d3e2;">png_ect9/7.png: 1311 bytes
+</span><span style="color:#b4d3e2;">png_ect9/6.png: 806 bytes
+</span><span style="color:#b4d3e2;">png_ect9/3.png: 1003 bytes
+</span><span style="color:#b4d3e2;">Total size: 14479 bytes
+</span><span style="color:#b4d3e2;">Number of items: 12
+</span><span style="color:#b4d3e2;">Average size: 1206 bytes
+</span></code></pre>
+<p>Look at that, a <em>teensy</em> bit more off. This is pretty much right up against the
+ceiling of what PNG can do for us without lossy techniques like palette
+compression.</p>
+<h3 id="png-summary">PNG Summary</h3>
+<p>TL;DR, convert your GIFs to PNGs and run them through
+<code>ect -9 --mt-deflate -strip</code>. With images this tiny, it is super fast, and
+you'll shave off some bits at zero cost to compatibility or fidelity. But what
+if we want to go further?</p>
+<h2 id="level-2-lossless-webp">Level 2: Lossless WebP</h2>
+<p>I know WebP has a bit of a reputation on the Web as having been the format that
+was shoved down our throats by Google and didn't really ever become a new
+standard for anything. I've talked in the past about lossy WebP being barely
+competitive with JPEG despite being far newer, but overall I can't say I dislike
+WebP as much as the next person. There are some important things to consider
+with WebP:</p>
+<ul>
+<li>WebP is mostly talked about as a lossy format, but it can be lossless.</li>
+<li>WebP's lossless mode is really impressive, and consistently outperforms the
+most optimized PNGs.</li>
+<li>WebP's animation support is pretty complete, especially compared to the mess
+that is GIF and the relatively obscure APNG. Discord recently supports
+animated WebP by default.</li>
+</ul>
+<p>I'm going to go in guns blazing with max-effort bruteforce WebP lossless via
+<code>cwebp</code>. I have <a href="https://github.com/gianni-rosato/minify">a script</a> that tries
+every encoding effort level from 0 to 9 and picks the smallest one, as effort 9
+isn't always the smallest for some reason. Here's the result:</p>
+<pre style="background-color:#000000;color:#ffffff;"><code><span style="color:#b4d3e2;">webp_l/5.webp: 670 bytes
+</span><span style="color:#b4d3e2;">webp_l/linux_2.webp: 700 bytes
+</span><span style="color:#b4d3e2;">webp_l/9.webp: 1114 bytes
+</span><span style="color:#b4d3e2;">webp_l/4.webp: 2456 bytes
+</span><span style="color:#b4d3e2;">webp_l/3.webp: 954 bytes
+</span><span style="color:#b4d3e2;">webp_l/firefox_now.webp: 1724 bytes
+</span><span style="color:#b4d3e2;">webp_l/12.webp: 296 bytes
+</span><span style="color:#b4d3e2;">webp_l/11.webp: 456 bytes
+</span><span style="color:#b4d3e2;">webp_l/10.webp: 1866 bytes
+</span><span style="color:#b4d3e2;">webp_l/7.webp: 1182 bytes
+</span><span style="color:#b4d3e2;">webp_l/linux_1.webp: 370 bytes
+</span><span style="color:#b4d3e2;">webp_l/6.webp: 744 bytes
+</span><span style="color:#b4d3e2;">Total size: 12532 bytes
+</span><span style="color:#b4d3e2;">Number of items: 12
+</span><span style="color:#b4d3e2;">Average size: 1044 bytes
+</span></code></pre>
+<h3 id="webp-summary">WebP Summary</h3>
+<p>An additional meaningful improvement with a bare compatibility cost and <em>still</em>
+no loss of fidelity whatsoever. This is the power of WebP's lossless mode. It's
+almost as significant as the gap between PNG and GIF. WebP is <em>worth using</em> for
+something like this. It is fair to have hesitation about adopting a slightly
+less common format, but WebP is supported across all major browsers. If your
+favorite app doesn't support WebP, it isn't WebP's fault at this point; it is a
+royalty free format that has its merits, and shouldn't be bastardized an account
+of its shaky introduction.</p>
+<p>But what if you don't care <em>at all</em> about compatibility, and you just want the
+smallest possible file size without fidelity loss?</p>
+<h2 id="step-3-jpeg-xl">Step 3: JPEG XL</h2>
+<p>JPEG XL is an incredibly cool format. I have plenty of additional JPEG XL
+coverage on my blog, and sites like the
+<a href="https://jpegxl.info/">community-run JPEG XL site</a> exist if you'd like more
+information, but the TL;DR is that JPEG XL is pretty much great at everything.
+It is a royalty-free, modern format that is designed to be the best of all
+worlds, and it is a format that I am very excited about.</p>
+<p>Unfortunately, Google's Chromium team notoriously rejected JPEG XL from the
+Chromium browser engine, so it is not supported in Chrome or any browser that
+uses Chromium. This is a huge bummer. JPEG XL is supported in Safari and
+throughout the Apple ecosystem, as well as in browsers like Waterfox and
+Thorium, so it is fair game to use JPEG XL images on your site with an
+appropriate fallback.</p>
+<p>For our purposes, we're just going to look at JPEG XL's lossless compression
+with <code>cjxl 0.11.0</code>. We'll be using the hidden super high effort mode via
+<code>cjxl -d 0 -e 11 --allow_expert_options</code> to see how low we can go:</p>
+<pre style="background-color:#000000;color:#ffffff;"><code><span style="color:#b4d3e2;">jxl_l/11.jxl: 417 bytes
+</span><span style="color:#b4d3e2;">jxl_l/10.jxl: 2394 bytes
+</span><span style="color:#b4d3e2;">jxl_l/linux_2.jxl: 740 bytes
+</span><span style="color:#b4d3e2;">jxl_l/12.jxl: 279 bytes
+</span><span style="color:#b4d3e2;">jxl_l/linux_1.jxl: 369 bytes
+</span><span style="color:#b4d3e2;">jxl_l/firefox_now.jxl: 2505 bytes
+</span><span style="color:#b4d3e2;">jxl_l/9.jxl: 1216 bytes
+</span><span style="color:#b4d3e2;">jxl_l/3.jxl: 846 bytes
+</span><span style="color:#b4d3e2;">jxl_l/7.jxl: 1244 bytes
+</span><span style="color:#b4d3e2;">jxl_l/6.jxl: 773 bytes
+</span><span style="color:#b4d3e2;">jxl_l/4.jxl: 3403 bytes
+</span><span style="color:#b4d3e2;">jxl_l/5.jxl: 590 bytes
+</span><span style="color:#b4d3e2;">Total size: 14776 bytes
+</span><span style="color:#b4d3e2;">Number of items: 12
+</span><span style="color:#b4d3e2;">Average size: 1231 bytes
+</span></code></pre>
+<p>...Hm. Not exactly what was promised.</p>
+<p>The reality is that JPEG XL's lossless mode is best with larger images, and
+images with &gt;8 BPC. Especially for HDR, JPEG XL significantly outperforms high
+bit depth PNG, and WebP doesn't support &gt;8 BPC. For tiny images like this, it is
+clearly not the best choice given what we're seeing here.</p>
+<p>The one saving grace we have at our disposal with JPEG XL is the super useful
+tools it makes available to us to do <em>slightly lossy</em> compression. We can do
+this by lowering the bit depth the encoder uses, or allowing JPEG XL's modular
+lossless compression to utilize a lossy palette. PNG and WebP are capable of
+similar tricks as well (like PNG's palette compression mode and WebP's "near
+lossless" compression), but JPEG XL does it better via cjxl in my opinion.</p>
+<p>Through adding <code>--modular_lossy_palette --modular_palette_colors=0</code>:</p>
+<pre style="background-color:#000000;color:#ffffff;"><code><span style="color:#b4d3e2;">jxl_lossy/11.jxl: 638 bytes
+</span><span style="color:#b4d3e2;">jxl_lossy/10.jxl: 1677 bytes
+</span><span style="color:#b4d3e2;">jxl_lossy/linux_2.jxl: 946 bytes
+</span><span style="color:#b4d3e2;">jxl_lossy/12.jxl: 281 bytes
+</span><span style="color:#b4d3e2;">jxl_lossy/linux_1.jxl: 608 bytes
+</span><span style="color:#b4d3e2;">jxl_lossy/firefox_now.jxl: 1589 bytes
+</span><span style="color:#b4d3e2;">jxl_lossy/9.jxl: 1248 bytes
+</span><span style="color:#b4d3e2;">jxl_lossy/3.jxl: 996 bytes
+</span><span style="color:#b4d3e2;">jxl_lossy/7.jxl: 1403 bytes
+</span><span style="color:#b4d3e2;">jxl_lossy/6.jxl: 773 bytes
+</span><span style="color:#b4d3e2;">jxl_lossy/4.jxl: 1583 bytes
+</span><span style="color:#b4d3e2;">jxl_lossy/5.jxl: 746 bytes
+</span><span style="color:#b4d3e2;">Total size: 12488 bytes
+</span><span style="color:#b4d3e2;">Number of items: 12
+</span><span style="color:#b4d3e2;">Average size: 1040 bytes
+</span></code></pre>
+<p>This is our best result yet, albeit a lossy one. Visual inpection will allow you
+determine if this is too lossy for you, in which case it may be best to stick
+with WebP.</p>
+<h3 id="jpeg-xl-summary">JPEG XL Summary</h3>
+<p>Overall, JPEG XL results seem mixed at this scale, and we've been driven to
+resorting to slightly lossy compression which isn't a great showing for the
+codec. However, if you look closely, there are some images that are the smallest
+with JPEG XL...</p>
+<pre style="background-color:#000000;color:#ffffff;"><code><span style="color:#b4d3e2;">jxl_l/11.jxl: 417 bytes
+</span><span style="color:#b4d3e2;">jxl_l/12.jxl: 279 bytes
+</span><span style="color:#b4d3e2;">jxl_l/linux_1.jxl: 369 bytes
+</span><span style="color:#b4d3e2;">jxl_l/3.jxl: 846 bytes
+</span><span style="color:#b4d3e2;">jxl_l/6.jxl: 773 bytes
+</span><span style="color:#b4d3e2;">jxl_l/5.jxl: 590 bytes
+</span></code></pre>
+<p>Exactly half the pictures were smallest with cjxl. The reference library for
+JPEG XL (called libjxl) is still pre-1.0, so maybe the bitstream has latent
+expressivity in its modular lossless mode that we've yet to see realized. The
+creators of the format have mentioned that peak bitstream expressivity has yet
+to be reached with libjxl especially as it pertains to lossy encoding, so only
+time will tell.</p>
+<h2 id="mixing-codecs">Mixing Codecs</h2>
+<p>By mixing our favorable results from WebP and JPEG XL, we minify our 88x31s to
+the maximum degree:</p>
+<pre style="background-color:#000000;color:#ffffff;"><code><span style="color:#b4d3e2;">mix/11.jxl: 417 bytes
+</span><span style="color:#b4d3e2;">mix/12.jxl: 279 bytes
+</span><span style="color:#b4d3e2;">mix/linux_2.webp: 700 bytes
+</span><span style="color:#b4d3e2;">mix/9.webp: 1114 bytes
+</span><span style="color:#b4d3e2;">mix/linux_1.jxl: 369 bytes
+</span><span style="color:#b4d3e2;">mix/4.webp: 2456 bytes
+</span><span style="color:#b4d3e2;">mix/firefox_now.webp: 1724 bytes
+</span><span style="color:#b4d3e2;">mix/3.jxl: 846 bytes
+</span><span style="color:#b4d3e2;">mix/10.webp: 1866 bytes
+</span><span style="color:#b4d3e2;">mix/6.jxl: 773 bytes
+</span><span style="color:#b4d3e2;">mix/5.jxl: 590 bytes
+</span><span style="color:#b4d3e2;">mix/7.webp: 1182 bytes
+</span><span style="color:#b4d3e2;">Total size: 12316 bytes
+</span><span style="color:#b4d3e2;">Number of items: 12
+</span><span style="color:#b4d3e2;">Average size: 1026 bytes
+</span></code></pre>
+<p>This gives us, with no fidelity loss, our smallest average size yet. This is a
+great result, and it shows that inspecting your outputs with compression is
+almost always worth doing.</p>
+<h2 id="animation">Animation</h2>
+<p>For animated images, we have three major options:</p>
+<ul>
+<li>GIF</li>
+<li>APNG</li>
+<li>Animated WebP</li>
+</ul>
+<p>I'll spare you the misery - Animated WebP is the best choice for animated
+images. It's the smallest, and it's supported in all major browsers. GIF is
+supported everywhere, but it's the largest.</p>
+<p>APNG encoding with FFmpeg: <code>ffmpeg -y -i {} -plays 0 {.}.apng</code></p>
+<p>Animated WebP encoding with FFmpeg:
+<code>ffmpeg -y -i {} -pix_fmt bgra -c:v libwebp_anim -lossless 1 {.}.webp</code></p>
+<p>Using <a href="https://upallnight.neocities.org/anibanner.gif">this image</a>:</p>
+<pre data-lang="bash" style="background-color:#000000;color:#ffffff;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#cccccc;">du</span><span style="font-style:italic;color:#8aa6c1;"> -h</span><span style="color:#cccccc;"> upallnight.</span><span style="font-weight:bold;color:#ffffff;">*
+</span><span style="color:#cccccc;">104K	upallnight.apng
+</span><span style="color:#cccccc;">104K	upallnight.gif
+</span><span style="color:#cccccc;">72K	upallnight.webp
+</span></code></pre>
+<p>In a bit more detail:</p>
+<pre data-lang="bash" style="background-color:#000000;color:#ffffff;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#cccccc;">stat</span><span style="font-style:italic;color:#8aa6c1;"> -f </span><span style="color:#cc66ff;">&#39;%z&#39;</span><span style="color:#cccccc;"> upallnight.</span><span style="font-weight:bold;color:#ffffff;">*
+</span><span style="color:#cccccc;">106127  </span><span style="font-style:italic;color:#428bdd;"># APNG
+</span><span style="color:#cccccc;">106384  </span><span style="font-style:italic;color:#428bdd;"># GIF
+</span><span style="color:#cccccc;">70712   </span><span style="font-style:italic;color:#428bdd;"># WebP
+</span></code></pre>
+<p>I know single image comparisons are flawed, but I've done more than just this
+one and the results are consistent. APNG can often make GIFs a bit smaller, but
+WebP crushes it here. You can optimize APNG further, but there isn't (usually) a
+compatibility benefit - animated WebP is the way to go.</p>
+<h2 id="my-approach">My Approach</h2>
+<p>The 88x31s on my homepage are a combination of a number of different coding
+techniques. I prioritized getting the maximum fidelity out of JPEG XL, and used
+lossless WebP as a fallback. My personal 88x31 is a lossy palette JPEG XL, while
+the JPEG XL community button is a lossy VarDCT JPEG XL. I quantized the bit
+depth more aggressively with some images at very little fidelity loss, and
+others I was able to use full lossless. Doing each of your images individually
+is a great way to get the best results, but can be time consuming.</p>
+<p>Everything animated is animated WebP, as animated JPEG XL isn't supported on
+Safari so the majority of people seeing my JPEG XL animations wouldn't see
+anything but a still frame.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>My final thoughts:</p>
+<ul>
+<li>For lossless compression, <strong>WebP consistently outperformed PNG and GIF</strong>,
+offering meaningful size reductions at a minimal compatibility tradeoff.</li>
+<li><strong>JPEG XL showed mixed results at this small scale</strong> but was able to achieve
+the smallest file sizes for about half the images using lossless mode. Its
+slightly lossy palette mode produced the smallest average size overall, but it
+is still lossy so you may want to use with caution.</li>
+<li><strong>Using WebP for some images and JPEG XL for others yielded the best overall
+lossless compression results.</strong></li>
+<li><strong>For animated images, WebP is clearly superior to both GIF and APNG</strong> in
+terms of file size while still being lossless (lossy WebP is quite good, too;
+it is a video codec under the hood, after all).</li>
+<li>Carefully evaluating each image individually with different codecs and
+settings is the key to achieving the best results.</li>
+</ul>
+<p>Even for tiny, simple images, modern compression techniques can yield meaningful
+improvements over legacy formats. It's worth taking the time to experiment with
+different codecs and settings to find the best balance of quality and file size
+for your images. You can argue it isn't practical because the images are already
+so tiny, and you'd probably be right, but this is more about doing it for sport.</p>
+<p>So, mess around a bit and see what you can do - it was a lot of fun for me, and
+as the "compression guy," I can't be caught dead using unoptimized images
+anywhere :)</p>
+<p>Peer with me:</p>
+<pre data-lang="html" style="background-color:#000000;color:#ffffff;" class="language-html "><code class="language-html" data-lang="html"><span style="color:#b4d3e2;">&lt;</span><span style="font-weight:bold;color:#ffffff;">a </span><span>href</span><span style="color:#b4d3e2;">=</span><span style="color:#cc66ff;">&quot;https://giannirosato.com&quot; </span><span>target</span><span style="color:#b4d3e2;">=</span><span style="color:#cc66ff;">&quot;_blank&quot;</span><span style="color:#b4d3e2;">&gt;
+</span><span style="color:#b4d3e2;">  &lt;</span><span style="font-weight:bold;color:#ffffff;">picture</span><span style="color:#b4d3e2;">&gt;
+</span><span style="color:#b4d3e2;">    &lt;</span><span style="font-weight:bold;color:#ffffff;">source
+</span><span style="color:#b4d3e2;">      </span><span>srcset</span><span style="color:#b4d3e2;">=</span><span style="color:#cc66ff;">&quot;https://giannirosato.com/static/images/88x31/gb82_88x31.jxl&quot;
+</span><span style="color:#b4d3e2;">      </span><span>type</span><span style="color:#b4d3e2;">=</span><span style="color:#cc66ff;">&quot;image/jxl&quot;
+</span><span style="color:#b4d3e2;">    &gt;
+</span><span style="color:#b4d3e2;">    &lt;</span><span style="font-weight:bold;color:#ffffff;">img
+</span><span style="color:#b4d3e2;">      </span><span>src</span><span style="color:#b4d3e2;">=</span><span style="color:#cc66ff;">&quot;https://giannirosato.com/static/images/88x31/gb82_88x31.webp&quot;
+</span><span style="color:#b4d3e2;">      </span><span>alt</span><span style="color:#b4d3e2;">=</span><span style="color:#cc66ff;">&quot;gianni&quot;
+</span><span style="color:#b4d3e2;">      </span><span>width</span><span style="color:#b4d3e2;">=</span><span style="color:#cc66ff;">&quot;88&quot;
+</span><span style="color:#b4d3e2;">      </span><span>height</span><span style="color:#b4d3e2;">=</span><span style="color:#cc66ff;">&quot;31&quot;
+</span><span style="color:#b4d3e2;">    &gt;
+</span><span style="color:#b4d3e2;">  &lt;/</span><span style="font-weight:bold;color:#ffffff;">picture</span><span style="color:#b4d3e2;">&gt;
+</span><span style="color:#b4d3e2;">&lt;/</span><span style="font-weight:bold;color:#ffffff;">a</span><span style="color:#b4d3e2;">&gt;
+</span></code></pre>
+<h3 id="sponsor-me-on-github-sponsors">Sponsor Me on GitHub Sponsors</h3>
+<p>Help support my open source efforts - a little goes a long way!</p>
+<p><a href="https://github.com/sponsors/gianni-rosato?o=esc">Sponsor</a></p>
+
+    <div class="blog-post-foot">
+      &copy; 2025 Gianni Rosato. All Rights Reserved.
+    </div>
+  </div>
+</article>
+
+      </div>
+    </main>
+  </body>
+</html>
