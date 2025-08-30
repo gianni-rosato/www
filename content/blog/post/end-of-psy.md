@@ -4,10 +4,7 @@ author = "Gianni Rosato"
 date = 2024-11-26
 +++
 
-SVT-AV1-PSY, a community fork of the SVT-AV1 video encoder, was created to
-enhance perceptual quality and ease of use for AV1 encoding. I co-created and
-currently maintain the project. Our new goal is to merge our features into
-SVT-AV1.
+SVT-AV1-PSY, a community fork of the SVT-AV1 video encoder, was created to enhance perceptual quality and ease of use for AV1 encoding. I co-created and currently maintain the project. Our new goal is to merge our features into SVT-AV1.
 
 <!-- more -->
 

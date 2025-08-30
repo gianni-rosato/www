@@ -4,9 +4,7 @@ author = "Gianni Rosato"
 date = 2023-07-16
 +++
 
-A brand new JPEG implementation from Google – called jpegli – supports the use
-of a perceptual colorspace to improve compression efficiency. How does it fare
-against other codecs, like WebP and AVIF?
+A brand new JPEG implementation from Google – called jpegli – supports the use of a perceptual colorspace to improve compression efficiency. How does it fare against other codecs, like WebP and AVIF?
 
 <!-- more -->
 

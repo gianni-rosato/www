@@ -9,6 +9,7 @@
       src="https://cloud.umami.is/script.js"
       data-website-id="ed9fd2cd-67dd-4524-ad11-1810fb677e29"
     ></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="{{ get_url(path="atom.xml", trailing_slash=false) }}">
     <link href="{{ get_url(path='main.css') }}" rel="stylesheet" />
     <link href="{{ get_url(path='blog.css') }}" rel="stylesheet" />
     <link href="{{ get_url(path='code.css') }}" rel="stylesheet" />
@@ -17,6 +18,8 @@
       {% if page %}{{ page.title }} | Gianni Rosato{% elif section %}{{
       section.title }} | Gianni Rosato{% else %}Gianni Rosato{% endif %}
     </title>
+    <meta name="description" content="{% if page %}{{ page.summary | safe | striptags }}{% elif section %}{{ section.description | safe }}{% else %}{% endif %}">
+    <meta property="og:type" content="{% if page %}article{% else %}website{% endif %}">
   </head>
 
   <body>

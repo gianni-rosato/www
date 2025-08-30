@@ -4,10 +4,7 @@ author = "Gianni Rosato"
 date = 2023-06-14
 +++
 
-JPEG is old, but a new perceptually optimized encoder just became available from
-Google called jpegli. Like the mozjpeg encoder aimed to outperform older JPEG
-implementations, jpegli aims to push the format to its limits in terms of
-compression efficiency.
+JPEG is old, but a new perceptually optimized encoder just became available from Google called jpegli. Like the mozjpeg encoder aimed to outperform older JPEG implementations, jpegli aims to push the format to its limits in terms of compression efficiency.
 
 <!-- more -->
 

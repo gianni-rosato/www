@@ -4,8 +4,7 @@ author = "Gianni Rosato"
 date = 2024-03-13
 +++
 
-Writing a fast and simple QOI encoder; illustrated with code examples, a spec
-breakdown, and step by step implementation instructions.
+Writing a fast and simple QOI encoder; illustrated with code examples, a spec breakdown, and step by step implementation instructions.
 
 <!-- more -->
 

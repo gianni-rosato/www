@@ -4,8 +4,7 @@ author = "Gianni Rosato"
 date = 2023-02-12
 +++
 
-In this test, we will compare the latest Aviator release to the latest Handbrake
-release in terms of visual quality per bit.
+In this test, we will compare the latest Aviator release to the latest Handbrake release in terms of visual quality per bit.
 
 <!-- more -->
 

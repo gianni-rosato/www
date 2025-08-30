@@ -4,10 +4,7 @@ author = "Gianni Rosato"
 date = 2023-03-16
 +++
 
-The current debate surrounding AVIF versus JPEG XL needs some third-party
-quantitative data to support arguments on either side. I've compiled a dataset
-of 27 high-resolution photographic images to compare performance across them all
-at a wide fidelity range.
+The current debate surrounding AVIF versus JPEG XL needs some third-party quantitative data to support arguments on either side. I've compiled a dataset of 27 high-resolution photographic images to compare performance across them all at a wide fidelity range.
 
 <!-- more -->
 

@@ -4,9 +4,7 @@ author = "Gianni Rosato"
 date = 2025-08-18
 +++
 
-The best open source video and image compression algorithms have improved
-significantly over the past year, and developer tools have miraculously kept up
-with this rapid pace. There has never been a better time for video.
+The best open source video and image compression algorithms have improved significantly over the past year, and developer tools have miraculously kept up with this rapid pace. There has never been a better time for video.
 
 <!-- more -->
 

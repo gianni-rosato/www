@@ -4,10 +4,7 @@ author = "Gianni Rosato"
 date = 2025-03-15
 +++
 
-Comparing video encoders involves using synthetic metrics to assess visual
-quality, helping generate data that can be visualized. Plotting encoder
-performance in different ways helps determine the best encoder for specific
-implementation needs.
+Comparing video encoders involves using synthetic metrics to assess visual quality, helping generate data that can be visualized. Plotting encoder performance in different ways helps determine the best encoder for specific implementation needs.
 
 <!-- more -->
 

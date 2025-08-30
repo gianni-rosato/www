@@ -4,9 +4,7 @@ author = "Gianni Rosato"
 date = 2023-03-16
 +++
 
-A collection of the images I used for the blog post published on the same day as
-this one, lossily compressed with JPEG XL. All images are licensed under CC
-BY-SA 4.0.
+A collection of the images I used for the blog post published on the same day as this one, lossily compressed with JPEG XL. All images are licensed under CC BY-SA 4.0.
 
 <!-- more -->
 

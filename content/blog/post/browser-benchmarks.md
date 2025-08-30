@@ -4,8 +4,7 @@ author = "Gianni Rosato"
 date = 2023-02-28
 +++
 
-Let's compare browser performance across a variety of architectures, operating
-systems, and browsers. Which browser is the most performant?
+Let's compare browser performance across a variety of architectures, operating systems, and browsers. Which browser is the most performant?
 
 <!-- more -->
 

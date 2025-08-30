@@ -4,8 +4,7 @@ author = "Gianni Rosato"
 date = 2023-02-11
 +++
 
-Aviator aims to enable simple, accessible AV1 encoding for everyone with a GUI
-powered by a fast AV1 encoder.
+Aviator aims to enable simple, accessible AV1 encoding for everyone with a GUI powered by a fast AV1 encoder.
 
 <!-- more -->
 

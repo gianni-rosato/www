@@ -4,8 +4,7 @@ author = "Gianni Rosato"
 date = 2023-04-15
 +++
 
-This article compares Nvidia's NVENC encoder to Intel's QSV encoder for AV1, as
-well as for other codecs. Who will win?
+This article compares Nvidia's NVENC encoder to Intel's QSV encoder for AV1, as well as for other codecs. Who will win?
 
 <!-- more -->
 

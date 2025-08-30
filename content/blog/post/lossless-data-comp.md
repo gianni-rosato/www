@@ -4,9 +4,7 @@ author = "Gianni Rosato"
 date = 2023-10-02
 +++
 
-Comparing the efficacy of various lossless data compression algorithms on text
-data, comparing time to compress vs output size. The algorithms tested include
-ZIP, 7-zip, XZ, Brotli, Zstandard, and zpaq.
+Comparing the efficacy of various lossless data compression algorithms on text data, comparing time to compress vs output size. The algorithms tested include ZIP, 7-zip, XZ, Brotli, Zstandard, and zpaq.
 
 <!-- more -->
 
