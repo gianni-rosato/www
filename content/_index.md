@@ -15,4 +15,4 @@ Some of what I have worked on includes:
 - [**SVT-AV1-PSY**](https://svt-av1-psy.com/), a fork of the SVT-AV1 encoder with a focus on perceptual quality
 - [**The Codec Wiki**](https://wiki.x266.mov/), a public resource for digital compression knowledge
 
-You can find more on [my GitHub](https://github.com/gianni-rosato). I also enjoy contributing to open-source projects, including [SVT-AV1](https://gitlab.com/AOMediaCodec/SVT-AV1/).
+You can find more on [my GitHub](https://github.com/gianni-rosato) or the [Projects page](/projects/). I also enjoy contributing to open-source projects, including [SVT-AV1](https://gitlab.com/AOMediaCodec/SVT-AV1/).
