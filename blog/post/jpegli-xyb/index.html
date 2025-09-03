@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <base target="_self" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script
+      defer
+      src="https://cloud.umami.is/script.js"
+      data-website-id="ed9fd2cd-67dd-4524-ad11-1810fb677e29"
+    ></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="https://giannirosato.com/atom.xml">
+    <link href="https://giannirosato.com/main.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/blog.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/code.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/favicon.webp" rel="icon">
+    <title>
+      XYB JPEG | Gianni Rosato
+    </title>
+    <meta name="description" content="A brand new JPEG implementation from Google – called jpegli – supports the use of a perceptual colorspace to improve compression efficiency. How does it fare against other codecs, like WebP and AVIF?">
+    <meta property="og:type" content="article">
+  </head>
+
+  <body>
+    <main>
+      <div class="container">
+        
+<article class="blog-post">
+  <header class="blog-post-header">
+    <div class="blog-post-meta">
+      <time>July 16, 2023</time>
+      <span class="author">Gianni Rosato</span>
+    </div>
+    <div class="nav-buttons">
+      <a href="https://giannirosato.com/blog/" class="pill-btn">Back</a>
+      <a href="https://giannirosato.com/" class="pill-btn">Home</a>
+    </div>
+    <h1 class="blog-post-title">
+      XYB JPEG
+    </h1>
+  </header>
+
+  <div class="blog-post-content">
+    <p>A brand new JPEG implementation from Google – called jpegli – supports the use of a perceptual colorspace to improve compression efficiency. How does it fare against other codecs, like WebP and AVIF?</p>
+<span id="continue-reading"></span><h1 id="xyb-jpeg">XYB JPEG</h1>
+<p>This is going to be a shorter post because I have done this kind of visual
+quality evaluation three times now, so if you're not sure what you're reading,
+please look at my
+<a href="https://giannirosato.com/blog/post/image-comparison/">Image Codec Comparison</a>
+post from March &amp; my
+<a href="https://giannirosato.com/blog/post/jpegli/">Mini Image Codec Comparison</a> from
+just last month. This may be the last one of these kinds of posts for a while
+unless something interesting can be wrung out of another SSIMULACRA2 plot. Maybe
+with comparing speeds next time?</p>
+<p>The reason I'm making this post is that I just discovered that the <code>ssimulacra2</code>
+binary that comes with libjxl can properly decode &amp; benchmark XYB JPEG encoded
+with <code>cjpegli</code> &amp; I wanted to test it for myself. The source images &amp; results are
+published here, but first I think it is worth explaining in greater detail what
+the XYB color space is.</p>
+<h2 id="perceptual-color">Perceptual Color</h2>
+<p>A perceptual color space is a color space designed to work around certain
+assumptions about the human visual system. One of these assumptions is
+trichromacy, which implies we can perceptually understand three independent
+color channels; the response from each channel can be attenuated or bolstered by
+the stimulus it receives, which allows us to see a myriad of different colors
+due to different wavelengths of light in the visual spectrum interacting at
+different intensities. We assume trichromacy in humans due to the presence of
+three types of cones in our eyes: one that receives green light, another that
+receives red, &amp; a final cone that can perceive blue light. These are the three
+additive primaries in our trichromatic visual system. Our cones &amp; their
+respective responses are illustrated in the graph below.</p>
+<p><img src="/static/images/cones_response.svg" alt="cones_response" /> <em>Wikimedia Commons. CC BY
+3.0</em></p>
+<p>If you were to place two coordinates in a perfect perceptual color space, the
+distance between the coordinates should map perfectly to our perception of their
+color difference. The problem is color perception is non-Euclidian, &amp; this is an
+impossible problem to completely solve. W. David Wright &amp; John Guild were up to
+the challenge, however, &amp; built the CIE XYZ colorspace to map more perfectly to
+our human visual system than prior attempts. Instead of a red, green, &amp; blue
+channel, XYZ specifies a luminance channel Y (like the commonly used YCbCr) &amp;
+chromaticity channels Z ("quasi-equal" to blue) &amp; X (another chromaticity
+coefficient based on psychovisual testing by Wright &amp; Guild; "a mix of the three
+CIE RGB curves chosen to be nonnegative"). If you want to try to visualize it,
+here's an example of our visual gamut under D65 illumination visualized within
+the XYZ color space:</p>
+<p><a href="https://upload.wikimedia.org/wikipedia/commons/transcoded/3/34/Visible_gamut_within_CIEXYZ_color_space_D65_whitepoint_mesh.webm/Visible_gamut_within_CIEXYZ_color_space_D65_whitepoint_mesh.webm.480p.vp9.webm">xyz_visual</a>
+<em>Wikimedia Commons. CC BY-SA 4.0</em></p>
+<h3 id="xyb-color">XYB Color</h3>
+<p>Now, that's the <em>XYZ</em> color space. <a href="https://youtu.be/rvhf6feXw7w">XYB</a> is an
+LMS-based color space. LMS stands for long, medium, and short, representing the
+response our cones have to different visible spectra, &amp; is newer than XYZ. The
+same general principle of modeling colors based on our cone response still
+applies to both, though, &amp; I think talking about XYZ is the best way to explain
+perceptual color on a basic level. The labels on the cones_response SVG above
+show our L, M, &amp; S cones. A 3x3 matrix operation can be applied to LMS to
+produce XYB, &amp; you will find that XYB justifies allocating fewer bits to the S
+channel (blue) due to the
+<a href="https://en.wikipedia.org/wiki/LMS_color_space#Image_processing">lower density of blue cones in our eyes</a>.
+This allows perceptual quantization of color values that map better to our
+visual system, spending bits where we can see them instead of where they aren't
+salient to us. JPEG XL already uses XYB internally.</p>
+<p>If you're interested in how jpegli works, see my
+<a href="https://giannirosato.com/blog/post/jpegli/">Mini Image Codec Comparison</a>.</p>
+<h2 id="methodology">Methodology</h2>
+<p>Here are the encoders I used for this test:</p>
+<ul>
+<li><strong>cjpegli</strong> from the libjxl repos, in 4:4:4 RGB, 4:4:4 XYB, 4:2:2 XYB, &amp; 4:2:0
+XYB modes</li>
+<li><strong>mozjpeg</strong> <code>mozjpeg version 4.1.3 (build 20230612)</code></li>
+<li><strong>cwebp</strong> <code>cwebp 1.3.1 | libsharpyuv: 0.2.1</code></li>
+<li><strong>cjxl</strong> <code>cjxl v0.9.0 2a6f1f2c [AVX2]</code></li>
+<li><strong>avifenc</strong> via aom-av1-lavish, latest git (Endless_Merging branch)</li>
+</ul>
+<p>And here are their parameters:</p>
+<ul>
+<li><code>cjpegli input -q [quality] N/A/--xyb --chroma_subsampling=[444/422/420] output.jpg</code></li>
+<li><code>cjpeg -q [quality] input &gt; [output.jpg]</code></li>
+<li><code>cwebp -m 6 -q [quality] input -o output.webp</code></li>
+<li><code>cjxl input output.jxl -q [quality] -e 6 -p</code></li>
+<li><code>avifenc -c aom -s 8 -j 12 -d 10 -y 444 --min 1 --max 63 -a end-usage=q -a cq-level=[quality] -a tune=ssim [input] [output.avif]</code></li>
+</ul>
+<p>I'm also using the standard <code>ssimulacra2</code> binary instead of <code>ssimulacra2_rs</code>
+because it seems to be much faster &amp; can decode both JPEG &amp; JXL natively.</p>
+<h3 id="faster-avif-jxl-encoding">Faster AVIF &amp; JXL encoding</h3>
+<p>Last blog post, Jon Sneyers suggested I use more realistic encoding speeds for
+<code>cjxl</code> &amp; <code>avifenc</code> as opposed to slower, more thorough speeds to test what
+people might realistically end up using outside hobbyist work where codec nerds
+are eager to wait an excruciatingly long time for encoding to finish. Besides, I
+already have plenty of material published regarding high-effort <code>cjxl</code> &amp;
+<code>avifenc</code>, so let's see what they can both do with a little speed this time
+around.</p>
+<p>One thing to note is that I'm using 12 threads to encode AVIF despite having a
+24-thread system. It seems that allowing avifenc to use all available threads
+harms encoding performance a bit on my machine, as was the case in my previous
+blog post. At speed 8, 12 threads seemed to outperform 8, so I decided to
+specify <code>-j 12</code> to give AVIF encoding its best shot for speed.</p>
+<p>I decided on JXL effort 6 &amp; AVIF speed 8 based on the following speed test
+results on my laptop with a different image not present in this corpus. While
+AVIF is still slower, they both seem to line up well enough here. <code>avifenc</code> is
+better for overall user time &amp; much better for system time in this
+configuration, but <code>cjxl</code> wins when it comes down to how much real time it takes
+to perform the benchmark which correlates to how fast it actually is between
+hitting the figurative "start" &amp; "stop" buttons. Because this is likely due to
+<code>cjxl</code> utilizing system resources better, I won't fault it for using more user &amp;
+system time versus avifenc.</p>
+<p><img src="/static/images/avifenc_cjxl_speed.svg" alt="avifenc_v_jxl_speed" /></p>
+<p>Log scale:</p>
+<p><img src="/static/images/avifenc_cjxl_speed_log.svg" alt="avifenc_v_jxl_speed" /></p>
+<p>Here are some speed benchmarks for each, using the parameters I specified
+earlier. Parameter modifications are disclosed. Benchmarked with <code>hyperfine</code>,
+tested on the first image in the corpus (test1.png).</p>
+<p><code>hyperfine --warmup 5 --runs 20 "command"</code></p>
+<p><code>zsh inxi -v CPU: 16-core (8-mt/8-st) 13th Gen Intel Core i7-13700K (-MST AMCP-) speed/min/max: 1512/800/5400 MHz Kernel: 6.4.3-zen1-1-zen x86_64 Up: 5h 5m Mem: 6.95/31.12 GiB (22.3%) Storage: 6.83 TiB (2.6% used) Procs: 523 Shell: Zsh inxi: 3.3.28</code></p>
+<p><strong>avifenc</strong> speed 8 j12 <em>182.4 kB</em></p>
+<p><code>% hyperfine --warmup 5 --runs 20 "avifenc -c aom -s 8 -j 12 -d 10 -y 444 --min 1 --max 63 -a end-usage=q -a cq-level=21 -a tune=ssim test1.png out.avif"</code>
+Benchmark 1: avifenc -c aom -s 8 -j 12 -d 10 -y 444 --min 1 --max 63 -a
+end-usage=q -a cq-level=21 -a tune=ssim test1.png out.avif</p>
+<blockquote>
+<p>Time (mean ± σ): 249.9 ms ± 6.2 ms [User: 397.2 ms, System: 19.5 ms] Range
+(min … max): 243.4 ms … 271.7 ms 20 runs</p>
+</blockquote>
+<p><strong>cjxl</strong> e6 <em>180.9 kB</em></p>
+<p><code>% hyperfine --warmup 5 --runs 20 "cjxl test1.png out.jxl -d 1.0 -e 6 -p -v"</code>
+Benchmark 1: cjxl test1.png out.jxl -d 1.0 -e 6 -p -v</p>
+<blockquote>
+<p>Time (mean ± σ): 192.1 ms ± 2.3 ms [User: 641.1 ms, System: 666.6 ms] Range
+(min … max): 188.7 ms … 199.7 ms 20 runs</p>
+</blockquote>
+<p><strong>cwebp</strong> m6 <em>177.2 kB</em></p>
+<p><code>% hyperfine --warmup 5 --runs 20 "cwebp -m 6 -q 90 test1.png -o out.webp"</code>
+Benchmark 1: cwebp -m 6 -q 90 test1.png -o out.webp</p>
+<blockquote>
+<p>Time (mean ± σ): 342.9 ms ± 1.0 ms [User: 337.4 ms, System: 4.5 ms] Range
+(min … max): 341.0 ms … 344.9 ms 20 runs</p>
+</blockquote>
+<p>cjpeg (<strong>mozjpeg</strong>) <em>184.1 kB</em></p>
+<p><code>% hyperfine --warmup 5 --runs 20 "cjpeg -q 80 test1.png &gt; out.jpeg"</code> Benchmark
+1: cjpeg -q 80 test1.png &gt; out.jpeg</p>
+<blockquote>
+<p>Time (mean ± σ): 196.7 ms ± 1.2 ms [User: 191.2 ms, System: 5.1 ms] Range
+(min … max): 195.3 ms … 199.7 ms 20 runs</p>
+</blockquote>
+<p>cjpegli <strong>4:4:4 rgb</strong> <em>184.8 kB</em></p>
+<p><code>% hyperfine --warmup 5 --runs 20 "cjpegli test1.png -d 1.4 --chroma_subsampling=444 out_444.jpeg"</code>
+Benchmark 1: cjpegli test1.png -d 1.4 --chroma_subsampling=444 out_444.jpeg</p>
+<blockquote>
+<p>Time (mean ± σ): 139.8 ms ± 0.8 ms [User: 132.0 ms, System: 7.5 ms] Range
+(min … max): 138.3 ms … 141.5 ms 20 runs</p>
+</blockquote>
+<p>cjpegli <strong>4:4:4 xyb</strong> <em>179.5 kB</em></p>
+<p><code>% hyperfine --warmup 5 --runs 20 "cjpegli test1.png --xyb -d 1.4 --chroma_subsampling=444 out_444-xyb.jpeg"</code>
+Benchmark 1: cjpegli test1.png --xyb -d 1.4 --chroma_subsampling=444
+out_444-xyb.jpeg</p>
+<blockquote>
+<p>Time (mean ± σ): 156.7 ms ± 0.8 ms [User: 148.7 ms, System: 7.6 ms] Range
+(min … max): 155.4 ms … 158.3 ms 20 runs</p>
+</blockquote>
+<p>cjpegli <strong>4:2:2 xyb</strong> <em>178.9 kB</em></p>
+<p><code>% hyperfine --warmup 5 --runs 20 "cjpegli test1.png --xyb -d 0.9 --chroma_subsampling=422 out_422-xyb.jpeg"</code>
+Benchmark 1: cjpegli test1.png --xyb -d 0.9 --chroma_subsampling=422
+out_422-xyb.jpeg</p>
+<blockquote>
+<p>Time (mean ± σ): 149.8 ms ± 0.8 ms [User: 141.9 ms, System: 7.5 ms] Range
+(min … max): 148.4 ms … 151.8 ms 20 runs</p>
+</blockquote>
+<p>cjpegli <strong>4:2:0 xyb</strong> <em>186.4 kB</em></p>
+<p><code>% hyperfine --warmup 5 --runs 20 "cjpegli test1.png --xyb -d 0.5 --chroma_subsampling=420 out_420-xyb.jpeg"</code>
+Benchmark 1: cjpegli test1.png --xyb -d 0.5 --chroma_subsampling=420
+out_420-xyb.jpeg</p>
+<blockquote>
+<p>Time (mean ± σ): 147.8 ms ± 0.7 ms [User: 139.8 ms, System: 7.6 ms] Range
+(min … max): 146.5 ms … 149.0 ms 20 runs</p>
+</blockquote>
+<p><img src="/static/images/enc_speeds_faster.svg" alt="speedtest_all" /></p>
+<h2 id="photographic-images">Photographic Images</h2>
+<p>Here are some lossy previews of the four images that were tested. <em>These will
+load properly on a browser supporting JXL, and on other browsers will fall back
+to XYB JPEG.</em></p>
+<p><img src="/static/images/test1-xyb.jpg" alt="XYB Test 1 Image" />
+<img src="/static/images/test2-xyb.jpg" alt="XYB Test 2 Image" />
+<img src="/static/images/test3-xyb.jpg" alt="XYB Test 3 Image" />
+<img src="/static/images/test4-xyb.jpg" alt="XYB Test 4 Image" /></p>
+<p>Here are the test results for each image!</p>
+<p><img src="/static/images/xyb-test1.svg" alt="test1_results_xyb" /></p>
+<p>This was an incredibly shocking first showing for XYB JPEG, outperforming other
+JPEGs, WebP, &amp; even AVIF at the critical high-fidelity range. There's some
+weirdness going on with mixing chroma subsampling &amp; XYB color for some reason,
+with an incredibly low quality ceiling that is hit very quickly. For 4:4:4, this
+is impressive to see XYB JPEG come second only to JXL.</p>
+<p><img src="/static/images/xyb-test2.svg" alt="test2_results_xyb" /></p>
+<p>Here, once again, XYB JPEG impresses by surpassing AVIF entirely at medium &amp;
+higher fidelity while putting the other JPEG encoders to shame. I am floored by
+how well this performs, although JXL remains a better option overall.</p>
+<p><img src="/static/images/xyb-test3.svg" alt="test3_results_xyb" /></p>
+<p>This is more what I'd expect out of AVIF, as it seems to be suffering in these
+other tests due to the faster preset we're using. I'm still impressed with XYB
+JPEG's ability to surpass WebP at 75+ SSIMU2.</p>
+<p><img src="/static/images/xyb-test4.svg" alt="test4_results_xyb" /></p>
+<p>Pretty similar to before, XYB JPEG handily beats WebP while still being
+outperformed by AVIF. I'm still wowed by the fact that the <em>ancient</em> JPEG is
+still even reasonably competitive with AVIF, but seeing how much better JXL does
+throughout these tests, it is clear the modern formats still have hope.</p>
+<h2 id="extrapolations">Extrapolations</h2>
+<p><img src="/static/images/xyb_results_avg.svg" alt="avg_xyb_results" /></p>
+<p>On average, seeing such a good showing from XYB JPEG has inspired me to start
+using the format more often. Anywhere ICC profiles are supported along with
+JPEG, XYB JPEG will be supported. I'm interested to see how it'd perform on a
+bigger dataset against higher effort JXL &amp; AVIF, but for now, I'm satisfied with
+its performance enough to argue for its adoption.</p>
+<p>The one snag is ICC color management support, although I've yet to run into a
+modern browser that doesn't pass
+<a href="https://cameratico.com/tools/web-browser-color-management-test/">these tests</a>.
+You can try it for yourself if you like, I'm not sure which browsers <em>don't</em>
+support ICCv2 color management, but those would not deal with XYB JPEG properly.</p>
+<p>Inspiration &amp; Sources:</p>
+<p><a href="https://en.wikipedia.org/wiki/CIE_1931_color_space#Definition_of_the_CIE_XYZ_color_space">en.wikipedia.org/wiki/CIE_1931_color_space#Definition_of_the_CIE_XYZ_color_space</a></p>
+<p><a href="https://raphlinus.github.io/color/2021/01/18/oklab-critique.html">raphlinus.github.io/color/2021/01/18/oklab-critique.html</a></p>
+<p><a href="https://en.wikipedia.org/wiki/LMS_color_space#Image_processing">https://en.wikipedia.org/wiki/LMS_color_space#Image_processing</a></p>
+<p><a href="https://observablehq.com/@mattdesl/perceptually-smooth-multi-color-linear-gradients">observablehq.com/@mattdesl/perceptually-smooth-multi-color-linear-gradients</a></p>
+<p>Thanks for reading!</p>
+<h3 id="sponsor-me-on-github-sponsors">Sponsor Me on GitHub Sponsors</h3>
+<p>Help support my open source efforts - a little goes a long way!</p>
+<p><a href="https://github.com/sponsors/gianni-rosato?o=esc">Sponsor</a></p>
+
+    <div class="blog-post-foot">
+      &copy; 2025 Gianni Rosato. All Rights Reserved.
+    </div>
+  </div>
+</article>
+
+      </div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <base target="_self" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script
+      defer
+      src="https://cloud.umami.is/script.js"
+      data-website-id="ed9fd2cd-67dd-4524-ad11-1810fb677e29"
+    ></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="https://giannirosato.com/atom.xml">
+    <link href="https://giannirosato.com/main.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/blog.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/code.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/favicon.webp" rel="icon">
+    <title>
+      Who Has the Best Hardware AV1 Encoder? | Gianni Rosato
+    </title>
+    <meta name="description" content="This article compares Nvidia&#x27;s NVENC encoder to Intel&#x27;s QSV encoder for AV1, as well as for other codecs. Who will win?">
+    <meta property="og:type" content="article">
+  </head>
+
+  <body>
+    <main>
+      <div class="container">
+        
+<article class="blog-post">
+  <header class="blog-post-header">
+    <div class="blog-post-meta">
+      <time>April 15, 2023</time>
+      <span class="author">Gianni Rosato</span>
+    </div>
+    <div class="nav-buttons">
+      <a href="https://giannirosato.com/blog/" class="pill-btn">Back</a>
+      <a href="https://giannirosato.com/" class="pill-btn">Home</a>
+    </div>
+    <h1 class="blog-post-title">
+      Who Has the Best Hardware AV1 Encoder?
+    </h1>
+  </header>
+
+  <div class="blog-post-content">
+    <p>This article compares Nvidia's NVENC encoder to Intel's QSV encoder for AV1, as well as for other codecs. Who will win?</p>
+<span id="continue-reading"></span>
+<p><em>Please be aware that this page contains JPEG XL images. In unsupported
+browsers, images may not load properly.</em></p>
+<h2 id="why">Why?</h2>
+<p>Nobody really knows which hardware accelerated AV1 encoder is better right now.</p>
+<p>There are other resources available, but they don't use good metrics. Everyone's
+favorite bad, obsolete, easily tricked metric is VMAF, which was good for a time
+but simply isn't good anymore. You can check out
+<a href="https://nitter.poast.org/jonsneyers/status/1573371624132419585">this Twitter thread</a>
+to see what I'm talking about; these aren't edge cases either. You can produce a
+"better quality" video according to VMAF using Contrast Adaptive Sharpening
+filters which inherently do not improve video fidelity in any way.</p>
+<p>Other metrics are PSNR, SSIM, MS-SSIM, SSIMULACRA, Butteraugli, &amp; SSIMULACRA2.
+PSNR doesn't accurately represent our visual system as humans, SSIM was good for
+its time but is now old and also provides inconsistent/misleading results, &amp;
+MS-SSIM does better but also doesn't correlate as well with our visual systems
+as newer metrics. The distance-based Butteraugli metric isn't bad, but
+SSIMULACRA2 is currently considered the gold standard for a visual quality
+metric.</p>
+<p>You can read more about why this metric is great
+<a href="https://github.com/cloudinary/ssimulacra2">here</a>, but SSIMULACRA2 (ssimu2) is,
+in my opinion, the only way to really measure subjective visual quality right
+now. The scores it produces correlate best with my eyes, and many others agree.</p>
+<p>Here's how SSIMULACRA2 assesses quality:</p>
+<blockquote>
+<p>Returns a score in range -inf..100, which correlates to subjective visual
+quality scores as follows:</p>
+<ul>
+<li>30 = low quality. This corresponds to the p10 worst output of mozjpeg
+-quality 30.</li>
+<li>50 = medium quality. This corresponds to the average output of cjxl -q 40 or
+mozjpeg -quality 40, or the p10 output of cjxl -q 50 or mozjpeg -quality 60.</li>
+<li>70 = high quality. This corresponds to the average output of cjxl -q 65 or
+mozjpeg -quality 70, p10 output of cjxl -q 75 or mozjpeg -quality 80.</li>
+<li>90 = very high quality. Likely impossible to distinguish from the original
+when viewed at 1:1 from a normal viewing distance. This corresponds to the
+average output of mozjpeg -quality 95 or the p10 output of cjxl -q 95.</li>
+</ul>
+</blockquote>
+<p>In my
+<a href="https://giannirosato.com/blog/post/image-comparison/">Image Codec Comparison</a>
+benchmark, I said "Because of the irrelevance of negative SSIMULACRA2 scores, I
+stopped the vertical axis on the graph(s) at 0." I still maintain this logic was
+correct for the image benchmark, but with livestreams, it isn't unusual to see a
+low bitrate stream due to a poor network connection on either a streamer's end
+or your own. This test is also more about how the encoders perform at certain
+target bitrates, as mentioned above, and since the goal isn't necessarily always
+to target a certain quality like it is with images, I think some of the less
+relevant data (eg target 500kb/s) is still important to include because of how
+it frames the more useful data (eg the 2000-6000kb/s range popular with
+streamers).</p>
+<p>Anyway, I've seen testing from many using VMAF, and their conclusions are varied
+relative to which hardware encoder is the best.
+<a href="https://rigaya.github.io/vq_results/">These tests</a> are more thorough than mine,
+but aren't accompanied by much explanation or any VAAPI results for Linux. They
+also use VMAF, so everything must be taken with a grain of salt. I still think
+they're useful in judging the quality of many hardware encoders that I haven't
+tested here (like AMD's stuff) so I'll still recommend you go take a look if
+you're interested. So, what did we find in our own testing?</p>
+<h2 id="methodology-gaming-corpus">Methodology (Gaming Corpus)</h2>
+<p>In order to understand who uses hardware encoders and where, look no further
+than livestreaming. Livestreaming can be done via OBS, and you have a choice to
+decide between CBR, VBR, &amp; CQP encoding. Many choose to opt for CBR or VBR,
+since your connection is most likely the bottleneck &amp; you can target a certain
+bitrate. I'd personally opt for VBR so that the encoder can intelligently
+allocate more or less bits when necessary while still targeting a specific
+bitrate on average. This also allows us to get better overall quality per bit,
+so the viewer can see a higher quality stream while using less data on average.
+It is more reliable for data usage &amp; bandwidth than CQP which targets quality, &amp;
+more efficient than CBR which will give every scene the same amount of bits no
+matter its content.</p>
+<p>With help from a couple friends online (namely
+<a href="https://github.com/Bl4cKn1gh7">BlacKnight</a> &amp;
+<a href="https://github.com/Maikurosofuto">Maik</a>), I tested hardware &amp; software encoders
+from target 500kb/s to target 8500kb/s in increments of 500. This gave us 16
+data points per encoder per clip to work with. I used two clips from DERF's Test
+Media - namely the CSGO clip &amp; the Minecraft clip under "Gaming" - and
+transcoded them to h264 with <code>crf 1</code> to provide the encoders with near
+mathematically lossless video that they could effectively decode. The loss
+introduced by reencoding at such high quality is miniscule &amp; should have a
+nearly undetectable effect on the benchmark results.</p>
+<p>Here's a screenshot from the CSGO clip:</p>
+<p><img src="/static/images/csgo.jxl" alt="csgo" /></p>
+<p>&amp; here's one from the Minecraft clip:</p>
+<p><img src="/static/images/minecraft.jxl" alt="minecraft" /></p>
+<p>All hardware encoders were on their highest effort preset
+(-compression_level 7) for optimal quality. It didn't have a massive effect on
+speed in my testing.</p>
+<p>The encoders tested for the CSGO clip were the following:</p>
+<ul>
+<li>h264 (UHD770 VAAPI)</li>
+<li>h264 (Arc A770 VAAPI)</li>
+<li>HEVC (UHD770 VAAPI)</li>
+<li>HEVC (Arc A770 VAAPI)</li>
+<li>HEVC (Arc A770 VAAPI, 10 bit)</li>
+<li>VP9 (UHD770 VAAPI)</li>
+<li>x264 (slower preset)</li>
+<li>SVT-AV1 (preset 6, 10 bit)</li>
+<li>SVT-AV1 (preset 8)</li>
+<li>SVT-AV1 (preset 8, 10 bit)</li>
+<li>Nvenc AV1 (RTX 4090)</li>
+<li>Nvenc AV1 (RTX 4090, 10 bit)</li>
+<li>QSV AV1 (Arc A770)</li>
+<li>QSV AV1 (Arc A770, 10 bit)</li>
+</ul>
+<p>The encoders tested for the Minecraft clip were the following:</p>
+<ul>
+<li>x265 (medium preset, 10 bit)</li>
+<li>SVT-AV1 (preset 4, 10 bit)</li>
+<li>SVT-AV1 (preset 6, 10 bit)</li>
+<li>SVT-AV1 (preset 8, 10 bit)</li>
+<li>Nvenc AV1 (RTX 4090, 10 bit)</li>
+<li>QSV AV1 (Arc A770, 10 bit)</li>
+</ul>
+<p>You may be wondering why there is such an emphasis on 10 bit encoding despite
+the 8 bit source. In my testing, even just with my eyes, encoding to 10 bit
+video with most lossy video codecs (HEVC &amp; AV1 in particular) yields better
+coding efficiency than encoding to 8 bit. I can't tell you exactly why, but I'm
+sure others on the <a href="https://discord.gg/Ecu428C">AV1 Community Discord</a> can.</p>
+<p>You may also be wondering about the lack of AMD numbers. I have a Radeon Rx
+6600xt &amp; myself and others found it very difficult to properly test AMD's
+hardware encoders. You can look at the results I linked above that report VMAF
+numbers - the massive discrepancy in AMD's AV1 performance compared to other AV1
+encoders should be enough to let you know how good AMD's results are.</p>
+<h2 id="results">Results</h2>
+<p>Finally, we come to the graphs. It is also worth noting that the default GOP
+size for the hardware encoders is around 300 frames; leaving it on "auto" in
+FFmpeg generally yielded <em>slightly</em> better results by a few fractions of a point
+in ssimu2, so that is what we did.</p>
+<h3 id="csgo">CSGO</h3>
+<p>Here is a graph for target bitrate (VBR) with the CSGO clip:</p>
+<p><img src="/static/images/csgo_results.svg" alt="csgo_results" /></p>
+<p>And a log scale version that we can use to see discrepancies better:</p>
+<p><img src="/static/images/csgo_results_log.svg" alt="csgo_results_log" /></p>
+<p>This is kind of a lot to unpack, as there are a considerable number of
+overlapping lines here. I've attached a CSV file
+<a href="https://github.com/gianni-rosato/hwenc-ssimu2-plotter/blob/main/csgo_results.csv">here</a>
+so that you can visualize this data on your own in any way you please, but I
+think we can come to a couple interesting conclusions given this current
+visualization. For this clip:</p>
+<ul>
+<li>There are clear, marked differences in coding efficiency depending on the
+encoder even if the codec is the same. So, just because your video is h264
+doesn't mean that is was encoded as efficiently as every other h264 video. You
+can see here that the Arc A770's h264 encoder yields better quality per bit
+than the h264 encoder that's part of the iGPU on my 13700k. The fixed function
+hardware Intel is deploying for these two implementations is distinct, and
+Arc's is clearly better. The software x264 encoder that runs directly on the
+CPU is certainly slower, but you can see how that pays off in spades.</li>
+<li>SVT-AV1 is in a class by itself. Preset 8 dominates the hardware encoders
+across the board by a not insignificant margin, &amp; Preset 6 pulls ahead even
+further. While hardware encoders are very fast and a gem for streaming,
+software encoders still take home the efficiency crown.</li>
+<li>NVENC AV1 is more efficient than QSV AV1 on Arc, even if the advantage is
+slight. Even when comparing 8 bit NVENC to 10 bit QSV, NVENC still manages to
+pull ahead ever so slightly.</li>
+</ul>
+<p>If you came here to rub salt in Arc users' wounds, I wouldn't say the advantage
+is significant enough to warrant purchasing a 40-series card over an Arc card
+<em>solely</em> for encoding especially considering the price discrepancy. However, the
+advantage is still there, and shouldn't be ignored. My takeaway is if you have
+more money than you know what to do with, don't buy an Arc GPU for encoding if
+you have a 40-series card from Nvidia already. Spend it on a nice bowl of ramen
+instead (or a couple nice bowls of ramen, realistically).</p>
+<h3 id="minecraft">Minecraft</h3>
+<p>Let's see what else we can find looking at the Minecraft results:</p>
+<p><img src="/static/images/minecraft_results.svg" alt="minecraft_results" /></p>
+<p>Here's another log scale version:</p>
+<p><img src="/static/images/minecraft_results_log.svg" alt="minecraft_results_log" /></p>
+<p>This one is more stripped down, &amp; everything is easier to see. Here are my
+takeaways:</p>
+<ul>
+<li>Now that we have x265 in the mix, we can see NVENC beat it across the board &amp;
+QSV came close. This is pretty impressive, as x265 medium isn't a fast setting
+by any stretch of the imagination.</li>
+<li>SVT-AV1 preset 4's performance leaves us with some clues about our final
+conclusion, seeing as software AV1 encoding (even with SVT-AV1, which doesn't
+produce as good quality per bit as AOM encoder forks like aom-av1-lavish)
+continues to pull ahead significantly the more time &amp; effort we allow it to
+use. It may be possible to stream using SVT-AV1 preset 8 on higher end systems
+right now, but more likely you'd be using preset 9 or 10, which is where I
+think SVT-AV1 is probably on par with hardware encoders. As CPUs become more
+powerful, this will become easier, &amp; it is clear that dedicated streaming
+hardware may continue to provide value for streamers who can afford it.</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<h3 id="who-won">Who Won?</h3>
+<p>Nvidia's hardware acceleration for AV1 video encoding is superior in these two
+clips. It is a tiny margin, and it is important to judge subjective visual
+quality for yourself when evaluating tiny discrepancies like this, but
+SSIMULACRA2 says that Nvidia has the better solution. I don't think that's the
+most important takeaway here, though, considering our peek at the potential
+software encoders have.</p>
+<h3 id="software-vs-hardware">Software vs hardware?</h3>
+<p>Software encoders are run on the CPU without any fixed function hardware
+designed around any specific codec. Hardware accelerated video encoding takes
+place on specialized ASICs that are attached to most consumer GPUs, &amp; encoding
+with hardware acceleration means the encoder can also make use of a GPU's highly
+parallel compute to further accelerate certain video encoding functions.
+Developing these ASICs is expensive, and dedicating valuable silicon real estate
+on GPUs to such features must prove to be well worth a company's time and money.
+Nvidia &amp; Intel both seem to agree that AV1 has enough of a future to make it
+financially sane to put fast dedicated hardware in the hands of every consumer
+who has one of their latest GPUs, which is pretty cool.</p>
+<p>The issue regarding efficiency is that this fixed function hardware is designed
+to be fast above all else, &amp; implementing less important codec features into
+this hardware can inflate costs without helping efficiency meaningfully. In
+software, while slower, encoders can pick and choose to enable/disable whatever
+features they like based on user specified parameters or internal defaults for
+each preset. This makes the use cases for both solutions very different.</p>
+<h3 id="when-should-i-use-hardware-encoders">When should I use hardware encoders?</h3>
+<p>As I mentioned earlier, livestreaming is where hardware accelerated video
+encoding is most popular. Nvidia has turned their NVENC hardware into a
+differentiating feature because of the popularity of livestreaming, &amp; as sites
+like Twitch &amp; YouTube roll out AV1 for the masses, livestreamers will appreciate
+having a powerful hardware implementation for the more efficient codec to stream
+with given their hardware readily supports it.</p>
+<p>Hardware encoding can also be great for screen recording, capturing clips in
+games, and trancoding media on the fly for a media server or something similar.
+When speed is the priority over coding efficiency, hardware encoders are a
+fantastic choice.</p>
+<p>Here are some places where you <em>probably shouldn't</em> use hardware encoders:</p>
+<ul>
+<li>Transcoding media you legally own for later consumption (unless you are
+burdened by a time limit or it is too painful to encode at less than real
+time)</li>
+<li>Re-encoding home video that needs to take up less space somewhere or needs to
+be shared easily</li>
+<li>Producing a final copy of a video project of some sort to be shared with
+others</li>
+<li>Illegally releasing pirated media that has been transcoded to achieve a
+smaller filesize for viewer convenience (I cannot recommend this regardless)</li>
+</ul>
+<p>You should never transcode something that has already been transcoded unless you
+have to - it is best to search for the source. If you have a BluRay collection
+that you transcoded to h264 ten years ago, don't go re-encoding it to AV1 now -
+find the source &amp; do it over, else you risk preserving artifacts from the
+original encode. And do it with a software encoder. If you're exporting a video
+for a project or something similar, it may be worth encoding to a lossless or
+near lossless file &amp; reencoding as efficiently as possible later when you can
+afford the time so you can optimize for quality per bit.</p>
+<p>SVT-AV1 is great for that sweet spot balance of speed &amp; efficiency for AV1
+video. Rav1e, my personal favorite software AV1 encoder, isn't the best, but it
+is great for high fidelity &amp; should never segfault.
+<a href="https://github.com/Clybius/aom-av1-lavish">aom-av1-lavish</a> is the reigning
+champ for coding efficiency in a software encoder. Use at speed 4 or lower for
+excellent results; they will be results you'll have to wait very long for,
+though. Tools like <a href="https://github.com/master-of-zen/Av1an">av1an</a> can help.</p>
+<p>You can try my SVT-AV1 GUI, <a href="https://github.com/gianni-rosato/aviator">Aviator</a>,
+if you'd like to mess around with SVT-AV1 without using the command line.
+<a href="https://github.com/gianni-rosato/aviator/tree/rAV1ator">rAV1ator</a> it its
+cousin, powered by av1an &amp; rav1e instead of SVT-AV1 &amp; FFmpeg. Please give them a
+look if you're interested in getting started with AV1. Once you'd like to dive
+down the rabbit hole, feel free to look into
+<a href="https://rentry.co/av1">this article</a> for a detailed guide written by a talented
+encoder. Thanks for reading!</p>
+
+    <div class="blog-post-foot">
+      &copy; 2025 Gianni Rosato. All Rights Reserved.
+    </div>
+  </div>
+</article>
+
+      </div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <base target="_self" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script
+      defer
+      src="https://cloud.umami.is/script.js"
+      data-website-id="ed9fd2cd-67dd-4524-ad11-1810fb677e29"
+    ></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="https://giannirosato.com/atom.xml">
+    <link href="https://giannirosato.com/main.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/blog.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/code.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/favicon.webp" rel="icon">
+    <title>
+      Comparing Video Encoders | Gianni Rosato
+    </title>
+    <meta name="description" content="Comparing video encoders involves using synthetic metrics to assess visual quality, helping generate data that can be visualized. Plotting encoder performance in different ways helps determine the best encoder for specific implementation needs.">
+    <meta property="og:type" content="article">
+  </head>
+
+  <body>
+    <main>
+      <div class="container">
+        
+<article class="blog-post">
+  <header class="blog-post-header">
+    <div class="blog-post-meta">
+      <time>March 15, 2025</time>
+      <span class="author">Gianni Rosato</span>
+    </div>
+    <div class="nav-buttons">
+      <a href="https://giannirosato.com/blog/" class="pill-btn">Back</a>
+      <a href="https://giannirosato.com/" class="pill-btn">Home</a>
+    </div>
+    <h1 class="blog-post-title">
+      Comparing Video Encoders
+    </h1>
+  </header>
+
+  <div class="blog-post-content">
+    <p>Comparing video encoders involves using synthetic metrics to assess visual quality, helping generate data that can be visualized. Plotting encoder performance in different ways helps determine the best encoder for specific implementation needs.</p>
+<span id="continue-reading"></span><div class="image-container">
+  <picture>
+    <img
+      src="https://giannirosato.com/static/img/skygb.avif"
+      width="1536"
+      height="864"
+      alt="Sky"
+    />
+  </picture>
+</div>
+<h2 id="why">Why?</h2>
+<p>Comparing video encoders isn't hard; in fact, it is usually quite easy. However,
+it is very often done incorrectly.</p>
+<p>That's a bit of an oversimplification. Comparing video encoders extremely well
+<em>is</em> rather difficult, and it is the focus of a lot of impactful research that
+aims to produce metrics that can properly assess how good a video looks to our
+eyes. The human eye is very complex, and guiding compression algorithms to care
+about the human visual system can get very interesting (I wrote a bit about
+<a href="https://giannirosato.com/blog/post/jpegli-xyb/">perceptual color encoding in JPEG</a>
+with the XYB colorspace used in JPEG XL, it can be very cool stuff).</p>
+<p>This article is more about what we can do now with the tools that we have,
+regardless of the metric we're interested in. Many people, including the SVT-AV1
+team, make use of <a href="https://wiki.x266.mov/docs/metrics/PSNR">PSNR</a>,
+<a href="https://wiki.x266.mov/docs/metrics/SSIM">SSIM</a>, and
+<a href="https://wiki.x266.mov/docs/metrics/VMAF">VMAF</a>, but today we're going to be
+(mainly) focusing on <a href="https://wiki.x266.mov/docs/metrics/XPSNR">XPSNR</a>, a
+perceptual metric by Fraunhofer HHI that is readily available in FFmpeg 7.1.</p>
+<p>Now that we have established the problem space, we can talk about:</p>
+<ul>
+<li>The tools we have available to compute metrics in a useful way</li>
+<li>How we can use them to compare video encoders</li>
+</ul>
+<h2 id="tools">Tools</h2>
+<p>A helpful toolbox of various scripts is provided by the <code>metrics</code> utility by the
+<a href="https://github.com/psy-ex">Psychovisual Experts Group</a>. You can find the code
+via <a href="https://github.com/psy-ex/metrics">this GitHub link</a>.</p>
+<p>This tool lets us compute some image-focused metrics that we will use for video,
+and Weighted XPSNR, a video metric based on XPSNR that includes chroma
+information (officially, XPSNR is recommended to be luma-only).</p>
+<h2 id="comparisons">Comparisons</h2>
+<p>There are three "tiers" of comparisons, each involving a bit more data than the
+last:</p>
+<ul>
+<li>Comparing a single video to another single video</li>
+<li>Comparing a series of encoders in terms of compression efficiency</li>
+<li>Comparing a series of encoders in terms of overall efficiency</li>
+</ul>
+<p>We'll start with simple two-video comparisons.</p>
+<h2 id="comparing-two-videos">Comparing Two Videos</h2>
+<p>XPSNR is what we call a <em>full-reference distortion metric</em>, which means we
+compare a distorted video to its source to get a score. Since we're encoding a
+source video with a video encoder, we can compare the source and the encode with
+<code>scores.py</code>:</p>
+<p><code>./scores.py [source] [encode]</code></p>
+<p>You can also use <code>encode.py</code> to encode the video for you. Either one will give
+us various statistics for the metrics we have available to us. Given we used the
+GPU for computation of SSIMULACRA2/Butteraugli (more on that in a second),
+you'll get something like this output:</p>
+<pre style="background-color:#000000;color:#ffffff;"><code><span style="color:#b4d3e2;">SSIMULACRA2 scores for every 1 frame:
+</span><span style="color:#b4d3e2;">Average:       75.22395
+</span><span style="color:#b4d3e2;">Std Deviation: 3.19206
+</span><span style="color:#b4d3e2;">10th Pctile:   70.52215
+</span><span style="color:#b4d3e2;">Butteraugli scores for every 1 frame:
+</span><span style="color:#b4d3e2;">Distance:      0.80522
+</span><span style="color:#b4d3e2;">Max Distance:  0.97927
+</span><span style="color:#b4d3e2;">XPSNR scores:
+</span><span style="color:#b4d3e2;">XPSNR Y:       34.80490
+</span><span style="color:#b4d3e2;">XPSNR U:       38.48910
+</span><span style="color:#b4d3e2;">XPSNR V:       37.42110
+</span><span style="color:#b4d3e2;">W-XPSNR:       35.61793
+</span></code></pre>
+<p>You'll notice that this is a lot more than just a single data point. We're just
+supposed to compare two videos and get a number for how the encode looks, right?
+Ideally, yes, but with the imperfect tools we have, we must do the best we can.</p>
+<p><a href="https://wiki.x266.mov/docs/metrics/SSIMULACRA2">SSIMULACRA2</a></p>
+<ul>
+<li>The average, or the arithmetic mean, is simple; now we know how our frames
+look, on average, according to an image metric.</li>
+<li>The harmonic mean could pull our average down toward the lower scores present
+in our per-frame score dataset that we're interpreting. This is theoretically
+a bit more informative than the average, as our eyes are going to be more
+sensitive to variability in the video's fidelity, so we make consistency
+desirable by favoring the lower-scoring frames. Note that we haven't reported
+the harmonic mean with SSIMULACRA2 here, as SSIMULACRA2 is capable of
+producing negative scores which are incompatible with the harmonic mean.</li>
+<li>The standard deviation tells us more about the video's consistency.</li>
+<li>The 10th percentile lets us know how our least desirable frames are scoring.</li>
+</ul>
+<p>So, lots of ways to try to make an image fidelity metric useful for video.</p>
+<p><a href="https://github.com/google/butteraugli">Butteraugli</a></p>
+<p>The way we use Butteraugli in <code>metrics</code>, we use 3pnorm, which weighs and
+averages certain parts of the frame, leaning toward more noticeable differences.
+So for our use case:</p>
+<ul>
+<li>The "Distance" is the average of per-frame 3pnorm scores</li>
+<li>The "Max Distance" is the maximum 3pnorm score we saw in a frame</li>
+</ul>
+<p>And finally, Weighted XPSNR, or W-XPSNR. This is kind of simple:</p>
+<ul>
+<li>Y XPSNR is "real" XPSNR, luma-only</li>
+<li>U &amp; V XPSNR are for chroma</li>
+<li>W-XPSNR extrapolates mean square error from each of the three scores and
+computes a weighted average favoring luma, then computes back to the dB units
+that PSNR-derived metrics (and others) use for reporting fidelity.</li>
+</ul>
+<p>So, Weighted XPSNR is just a weighted average for luma and chroma scores that
+aims to fairly favor luma since that is what our eyes care most about.</p>
+<h2 id="comparing-compression-efficiency">Comparing Compression Efficiency</h2>
+<p>Now we have scores for one video. But, what size is it? How does it compare to
+another video from another encoder that's a slightly different size with
+slightly different scores? You can interpret this subjectively, like saying your
+1.74MB video at XPSNR 34.03 from Encoder A <em>feels</em> like a better option than a
+1.81MB video that scores 34.21 from Encoder B, but how can we know for sure?</p>
+<p>The best way we can do this is by looking at a curve that plots size-to-score
+for a series of clips, which is meant to allow us to see which encoder (or
+configuration) achieves the best compression efficiency.</p>
+<p>Here's a plot comparing various SVT-AV1 speed settings:</p>
+<p><img src="/static/images/compression_efficiency.svg" alt="SVT-AV1 Speed Plot" /></p>
+<p>You can see that despite the fact that Preset 4 &amp; Preset 2 produce smaller files
+at each CRF level, they are not the most efficient presets, because Preset 0
+displays the best compression efficiency according to the curve. Each one of
+these curves came from an invocation of <code>stats.py</code> that provided us with the
+data we wanted.</p>
+<p>Here's an example of how to use <code>stats.py</code>:</p>
+<pre style="background-color:#000000;color:#ffffff;"><code><span style="color:#b4d3e2;">./stats.py \
+</span><span style="color:#b4d3e2;">-i source.mkv \
+</span><span style="color:#b4d3e2;">-q &quot;20 21 24 26 30&quot; \
+</span><span style="color:#b4d3e2;">-o ./stats.csv \
+</span><span style="color:#b4d3e2;">-g 4 \
+</span><span style="color:#b4d3e2;">svtav1 -- --preset 8 --tune 2
+</span></code></pre>
+<p>This encodes <code>source.mkv</code> at 5 CRF values, then outputs the results to
+<code>stats.csv</code> which include metrics and encode time. We use 4 GPU threads, and we
+pass a couple of options to SVT-AV1.</p>
+<p>We picked our 5 CRF values by choosing our bounds and the number of values we
+want, according to a formula (in Python):</p>
+<p><code>min_q + (max_q - min_q) * ((step / (q_steps - 1)) ** 1.5) for step in range(q_steps)</code></p>
+<p>Rounding our results to integers (necessary with current SVT-AV1) gave us 5 CRF
+values between 20 and 30, according to my input. We use this formula to focus
+more of our data points on higher fidelity encodes, where the difference in
+filesize may be larger for smaller differences in fidelity. This is more helpful
+when working with much higher fidelity than we care about here, but it is a good
+thing to remember, because we want a curve with less data points to look more
+like one with a greater number of data points.</p>
+<p>Now, we can compare encoders by generating multiple curves. We have the data,
+and we can use <code>plot.py</code> with our data inputs for a simple plot.</p>
+<p>For a hobbyist use case, this may be a fine place to stop. If it encodes in
+reasonable time, and it is closer to the upper left on the curve, it may satisfy
+you to use the more compression efficient encoder. But, what about at production
+scale, where you care more about time?</p>
+<h2 id="comparing-overall-efficiency">Comparing Overall Efficiency</h2>
+<p>Before moving on, consider what we need for this graph:</p>
+<ul>
+<li>A value representing the metric difference between two curves</li>
+<li>A value representing the time difference between the encoder/configuration
+used for each curve</li>
+<li>A graph that compares these two for various steps on a curve, which we can use
+to compare other curves for other encoders</li>
+</ul>
+<p>That final encoder curve describes an encoder's overall efficiency according to
+a given metric. Now, let's explore how to gather each value.</p>
+<p><strong>BD-Rate</strong> (Bjontegaard Delta Rate) is a way to compare the efficiency of two
+curves. It answers the question: "For the same quality level, how much more or
+less data does method B need compared to method A?"</p>
+<p>If you stopped at the end of the previous section and ran <code>plot.py</code>, you'd
+notice that it provides BD-Rate numbers for each stats file you provided it,
+relative to the first stats file. So, if the BD-Rate is -20% between A &amp; B, it
+means the second method needs 20% less data to achieve the same quality as the
+first method, which is a good improvement.</p>
+<p><code>plot.py</code> writes these BD-Rate values to a CSV, along with the average time
+computed across the encodes in each stats file.</p>
+<p>Now, your next <code>plot.py</code> invocation (for the next stats files belonging to the
+next encoder) <em>needs</em> to use the <em>previous</em> worst stats file as the first
+argument in order to compute BD-Rates relative to the encoder you're now
+comparing against. You'll get another CSV output.</p>
+<p>Here's an example result, comparing SVT-AV1 v3.0.0 to SVT-AV1-PSY v2.3.0-B:</p>
+<p><img src="/static/images/encoder_efficiency.svg" alt="SVT-AV1 BD-Rate Plot" /></p>
+<p><em>BD-Rates computed relative to SVT-AV1-PSY v2.3.0-B's Preset 10, which is why
+that data point has a BD-Rate of 0%.</em></p>
+<p>You can see that SVT-AV1 v3.0.0 is able to produce smaller BD-Rates relative to
+v2.3.0-B in less time, so it would be considered the more efficient encoder,
+according to W-XPSNR. Again, even though Preset 10 in SVT-AV1 v3.0.0 has a worse
+BD-Rate than Preset 10 in SVT-AV1-PSY v2.3.0-B, the time difference means that
+along the curve SVT-AV1 v3.0.0 is more efficient overall.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>That's all for now. I hope you found this blog post helpful in understanding how
+to compare encoders, because it is a crucial part of encoder development and can
+help you make an informed decision about which encoder to use for your specific
+needs. Happy encoding!</p>
+<h3 id="sponsor-me-on-github-sponsors">Sponsor Me on GitHub Sponsors</h3>
+<p>Help support my open source efforts - a little goes a long way!</p>
+<p><a href="https://github.com/sponsors/gianni-rosato?o=esc">Sponsor</a></p>
+
+    <div class="blog-post-foot">
+      &copy; 2025 Gianni Rosato. All Rights Reserved.
+    </div>
+  </div>
+</article>
+
+      </div>
+    </main>
+  </body>
+</html>
