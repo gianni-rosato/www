@@ -112,6 +112,14 @@
   justify-content: flex-start;
 }
 
+.inline-button {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
 .pill-btn {
   display: inline-block;
   padding: 0.5rem 1rem;

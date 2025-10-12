@@ -16,7 +16,7 @@
   src: url("./fonts/InterVariable.woff2") format("woff2");
   font-style: normal;
   font-display: swap;
-  font-variant-ligatures: none;
+  font-variant-ligatures: normal;
 }
 
 @font-face {
@@ -24,7 +24,7 @@
   src: url("./fonts/CommitMono.woff2") format("woff2");
   font-style: normal;
   font-display: swap;
-  font-variant-ligatures: none;
+  font-variant-ligatures: normal;
 }
 
 * {
@@ -59,6 +59,20 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 1rem;
   margin-top: 2rem;
   line-height: 1.2;
+}
+
+h1, h2 {
+    font-size: 1.75rem;
+}
+
+h3 {
+    margin-top: 1.5rem;
+    font-size: 1.25rem;
+}
+
+h4 {
+    margin-top: 1.25rem;
+    font-size: 1.05rem;
 }
 
 ul, ol {
