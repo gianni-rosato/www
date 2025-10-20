@@ -210,6 +210,17 @@ img {
   object-fit: contain;
 }
 
+.foot {
+  font-size: 1rem;
+  color: var(--lightestgrey);
+  margin-top: 3rem;
+  margin-bottom: 0rem;
+  text-align: center;
+  a {
+    color: var(--lightestgrey);
+  }
+}
+
 @media (min-width: 768px) {
   .container {
     padding-left: 3rem;

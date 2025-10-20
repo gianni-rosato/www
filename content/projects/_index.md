@@ -1,6 +1,6 @@
 +++
 title="Projects"
-template="projects.html"
+template="generic.html"
 +++
 
 Here's a (mostly) exhaustive list of open source projects I've started or was/am actively involved in.
