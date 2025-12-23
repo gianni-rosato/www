@@ -12,6 +12,7 @@ Here's a (mostly) exhaustive list of open source projects I've started or was/am
 - [Aviator](https://github.com/gianni-rosato/aviator), a GUI for encoding AV1 video with Opus audio
 - [oavif](https://github.com/gianni-rosato/oavif), a new approach to target quality encoding in image compression
 - [fssimu2](https://github.com/gianni-rosato/fssimu2), a fast SSIMULACRA2 implementation in Zig
+- [fcvvdp](https://github.com/halidecx/fcvvdp), an efficient CVVDP implementation in C
 - [qoi-enc-zig](https://github.com/gianni-rosato/qoi-enc-zig), a fast encoder for the QOI lossless image codec written in Zig
 - [qoi-dec-zig](https://github.com/gianni-rosato/qoi-dec-zig), a fast decoder for the QOI lossless image codec written in Zig
 - [This website](https://github.com/gianni-rosato/www)
