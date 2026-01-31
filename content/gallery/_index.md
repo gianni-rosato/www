@@ -5,8 +5,13 @@ template="gallery.html"
 
 I believe that the best compression enables artists to express themselves in novel ways. I take photos sometimes, and I wouldn't consider myself a photographer, but I'd like to share some of my pictures with you here.
 
-Please note that this page loads ~20 MB (AVIF) or ~40 MB (High-fidelity JPEG XL) of data if you scroll through all of the photos. This page is best experienced with a browser that supports JPEG XL.
+*Note: Not all browsers may properly display HDR images used on this page.*
 
+{{ gallery_img(src="/static/gallery/avif/hdr-001.avif", fb="/static/gallery/avif/hdr-001.avif", type="avif") }}
+{{ gallery_img(src="/static/gallery/avif/hdr-002.avif", fb="/static/gallery/avif/hdr-002.avif", type="avif") }}
+{{ gallery_img(src="/static/gallery/avif/hdr-003.avif", fb="/static/gallery/avif/hdr-003.avif", type="avif") }}
+{{ gallery_img(src="/static/gallery/avif/hdr-004.avif", fb="/static/gallery/avif/hdr-004.avif", type="avif") }}
+{{ gallery_img(src="/static/gallery/avif/hdr-005.avif", fb="/static/gallery/avif/hdr-005.avif", type="avif") }}
 {{ gallery_img(src="/static/gallery/jxl/001.jxl", fb="/static/gallery/avif/001.avif", type="jxl") }}
 {{ gallery_img(src="/static/gallery/jxl/002.jxl", fb="/static/gallery/avif/002.avif", type="jxl") }}
 {{ gallery_img(src="/static/gallery/jxl/003.jxl", fb="/static/gallery/avif/003.avif", type="jxl") }}

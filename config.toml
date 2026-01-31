@@ -1,25 +1,25 @@
-# The URL the site will be built for
+# URL the site will be built for
 base_url = "https://giannirosato.com"
 
-# Whether to automatically compile all Sass files in the sass directory
+# automatically compile sass files in the sass directory
 compile_sass = true
 
-# Whether to build a search index to be used later on by a JavaScript library
+# build a search index to be used later on by a JS lib
 build_search_index = false
 
-# Generate an Atom feed
+# atom feed
 generate_feeds = true
 feed_filenames = ["atom.xml"]
 title = "Gianni Rosato"
 author = "Gianni Rosato"
 description = "Hi, I'm Gianni. I build video & image compression technology for a more beautiful Internet."
 
+# syntax highlighting
 [markdown]
-# Whether to do syntax highlighting
-# Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
-highlight_code = true
-extra_syntaxes_and_themes = ["highlight_themes", "highlight_themes/custom"]
-highlight_theme = "black_pearl_2"
+[markdown.highlighting]
+error_on_missing_language = true
+# inline hex colours (`inline`) or css classes (`class`)
+style = "inline"
+theme = "vitesse-black"
 
 [extra]
-# Put all your custom variables here
