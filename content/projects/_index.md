@@ -16,7 +16,7 @@ Here's a (mostly) exhaustive list of open source projects I've started or was/am
 - [qoi-enc-zig](https://github.com/gianni-rosato/qoi-enc-zig), a fast encoder for the QOI lossless image codec written in Zig
 - [qoi-dec-zig](https://github.com/gianni-rosato/qoi-dec-zig), a fast decoder for the QOI lossless image codec written in Zig
 - [This website](https://github.com/gianni-rosato/www)
-- [An Analysis of Compression Technologies Used in the Delivery of Internet Video](https://github.com/gianni-rosato/An-Analysis-of-Compression-Technologies-Used-in-the-Delivery-of-Internet-Video), a research paper I authored under the mentorship of [Luc Trudeau](https://luctrudeau.github.io) alongside my university
+- [An Analysis of Compression Technologies Used in the Delivery of Internet Video](https://github.com/gianni-rosato/An-Analysis-of-Compression-Technologies-Used-in-the-Delivery-of-Internet-Video), a research paper I authored under the mentorship of [Luc Trudeau](https://trud.ca) alongside my university
 - [photodetect2](https://github.com/gianni-rosato/photodetect2), an implementation of SVT-AV1-PSY's photographic image detection algorithm in Zig
 - [gb82 image set](https://github.com/gianni-rosato/gb82-image-set), a public domain image dataset for developing image compression algorithms
 - [svt-av1-psy-web](https://github.com/gianni-rosato/svt-av1-psy-web), SVT-AV1-PSY's official website
