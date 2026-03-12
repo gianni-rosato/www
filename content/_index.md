@@ -8,7 +8,7 @@ description = "Hi, I'm Gianni. I build video & image compression technology for 
 
 {{ line() }}
 
-Some of what I have worked on includes:
+Some of what I have worked on:
 
 - [**Iris-WebP**](https://halide.cx/iris/), the world's best WebP encoder
 - [**Eve-AV1**](https://www.twoorioles.com/eve-av1) & [**Eve-VP9**](https://www.twoorioles.com/eve-vp9), commercial video encoders developed by Two Orioles
@@ -16,3 +16,5 @@ Some of what I have worked on includes:
 - [**The Codec Wiki**](https://wiki.x266.mov/), a public resource for digital compression knowledge
 
 You can find more on [my GitHub](https://github.com/gianni-rosato) or the [Projects page](/projects/). I also enjoy contributing to open-source projects, including [SVT-AV1](https://gitlab.com/AOMediaCodec/SVT-AV1/).
+
+I do contract work and build Iris-WebP at my company, [Halide Compression](https://halide.cx).

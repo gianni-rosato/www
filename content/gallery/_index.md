@@ -3,7 +3,7 @@ title="Gallery"
 template="gallery.html"
 +++
 
-I believe that the best compression enables artists to express themselves in novel ways. I take photos sometimes, and I wouldn't consider myself a photographer, but I'd like to share some of my pictures with you here.
+Check out some photos I've taken!
 
 *Note: Not all browsers may properly display HDR images used on this page.*
 
