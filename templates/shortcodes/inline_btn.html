@@ -1,3 +1,4 @@
 <div class="inline-button">
-  <a href="{{ url | default(value="") }}" target="_blank" class="pill-btn">{{ text | default(value="") }}</a>
+  {% set label = text | default(value=url | default(value="Link")) %}
+  <a href="{{ url | default(value="") }}" target="_blank" rel="noopener noreferrer" class="pill-btn" aria-label="{{ label }}">{{ text | default(value="") }}</a>
 </div>

@@ -5,10 +5,10 @@
       <time>{{ page.date | date(format="%B %d, %Y")}}</time>
       <span class="author">Gianni Rosato</span>
     </div>
-    <div class="nav-buttons">
-      <a href="{{ get_url(path='@/blog/_index.md') }}" class="pill-btn">Back</a>
-      <a href="{{ get_url(path='@/_index.md') }}" class="pill-btn">Home</a>
-    </div>
+    <nav class="nav-buttons" aria-label="Post navigation">
+      <a href="{{ get_url(path='@/blog/_index.md') }}" class="pill-btn" aria-label="Back to the blog">Back</a>
+      <a href="{{ get_url(path='@/_index.md') }}" class="pill-btn" aria-label="Go to the home page">Home</a>
+    </nav>
     <h1 class="blog-post-title">
       {{ page.title }}
     </h1>

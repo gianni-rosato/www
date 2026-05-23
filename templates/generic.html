@@ -1,8 +1,8 @@
 {% extends "base.html" %} {% block content %}
 <div class="projects">
-  <div class="nav-buttons">
-    <a href="{{ get_url(path='@/_index.md') }}" class="pill-btn">Home</a>
-  </div>
+  <nav class="nav-buttons" aria-label="{{ section.title }} navigation">
+    <a href="{{ get_url(path='@/_index.md') }}" class="pill-btn" aria-label="Go to the home page">Home</a>
+  </nav>
   <h1>
     {{ section.title }}
   </h1>

@@ -1,35 +1,18 @@
 {% extends "base.html" %} {% block content %}
 <div class="home">
     {{ section.content | safe }}
-    <div class="home-nav-buttons">
-      <a href="{{ get_url(path='@/blog/_index.md') }}" class="pill-btn">Blog</a>
-      <a href="mailto:giannirosato@proton.me" class="pill-btn">Email</a>
-      <a href="{{ get_url(path='@/gallery/_index.md') }}" class="pill-btn">Gallery</a>
-      <a href="{{ get_url(path='@/projects/_index.md') }}" class="pill-btn">Projects</a>
-    </div>
-    <!-- social icons -->
-    <div class="social-container">
-      <a href="https://www.linkedin.com/in/gianni-r-52487124b/" target="_blank">
-        <img src="/static/images/linkedin.svg" alt="LinkedIn Icon" />
+    <nav class="home-nav-buttons" aria-label="Primary navigation">
+      <a href="{{ get_url(path='@/blog/_index.md') }}" class="pill-btn" aria-label="Read the blog">Blog</a>
+      <a href="mailto:giannirosato@proton.me" class="pill-btn" aria-label="Email Gianni Rosato">Email</a>
+      <a href="{{ get_url(path='@/gallery/_index.md') }}" class="pill-btn" aria-label="View the gallery">Gallery</a>
+      <a href="{{ get_url(path='@/projects/_index.md') }}" class="pill-btn" aria-label="View projects">Projects</a>
+    </nav>
+    <nav class="social-container" aria-label="Social links">
+      {% for link in config.extra.social_links %}
+      <a href="{{ link.href }}" target="_blank" rel="noopener noreferrer" aria-label="{{ link.label }}">
+        <img src="{{ link.icon }}" alt="" aria-hidden="true" />
       </a>
-      <a href="https://disobey.net/@gianni" target="_blank">
-        <img src="/static/images/mastodon.svg" alt="Mastodon Icon" />
-      </a>
-      <a href="https://bsky.app/profile/giannirosato.com" target="_blank">
-        <img src="/static/images/bsky.svg" alt="Bluesky Icon" />
-      </a>
-      <a href="https://discord.gg/bbQD5MjDr3" target="_blank">
-        <img src="/static/images/discord.svg" alt="Discord Icon" />
-      </a>
-      <a href="https://matrix.to/#/@computerbustr:matrix.org" target="_blank">
-        <img src="/static/images/matrix.svg" alt="Matrix Icon" />
-      </a>
-      <a href="https://github.com/gianni-rosato" target="_blank">
-        <img src="/static/images/github.svg" alt="GitHub Icon" />
-      </a>
-      <a href="https://kernel.org/" target="_blank">
-        <img src="/static/images/tux.svg" alt="Linux Icon" />
-      </a>
-    </div>
+      {% endfor %}
+    </nav>
 </div>
 {% endblock content %}

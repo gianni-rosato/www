@@ -1,7 +1,14 @@
+{% if alt is defined %}
+{% set image_alt = alt %}
+{% else %}
+{% set image_name = fb | split(pat="/") | last | split(pat=".") | first %}
+{% set image_alt = "Gallery image " ~ image_name %}
+{% endif %}
 <picture>
-  <source srcset="{{ get_url(path=src) }}" type="image/{{ type | default(value=jxl) }}" />
+  <source srcset="{{ get_url(path=src) }}" type="image/{{ type | default(value="jxl") }}" />
   <img
       src="{{ get_url(path=fb) }}"
       loading="lazy"
+      alt="{{ image_alt }}"
   />
 </picture>

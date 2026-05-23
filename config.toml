@@ -23,3 +23,170 @@ style = "inline"
 theme = "vitesse-black"
 
 [extra]
+
+[[extra.social_links]]
+href = "https://www.linkedin.com/in/gianni-r-52487124b/"
+icon = "/static/images/linkedin.svg"
+label = "Visit Gianni Rosato on LinkedIn"
+
+[[extra.social_links]]
+href = "https://disobey.net/@gianni"
+icon = "/static/images/mastodon.svg"
+label = "Visit Gianni Rosato on Mastodon"
+
+[[extra.social_links]]
+href = "https://bsky.app/profile/giannirosato.com"
+icon = "/static/images/bsky.svg"
+label = "Visit Gianni Rosato on Bluesky"
+
+[[extra.social_links]]
+href = "https://discord.gg/bbQD5MjDr3"
+icon = "/static/images/discord.svg"
+label = "Join the Discord server"
+
+[[extra.social_links]]
+href = "https://matrix.to/#/@computerbustr:matrix.org"
+icon = "/static/images/matrix.svg"
+label = "Message Gianni Rosato on Matrix"
+
+[[extra.social_links]]
+href = "https://github.com/gianni-rosato"
+icon = "/static/images/github.svg"
+label = "Visit Gianni Rosato on GitHub"
+
+[[extra.social_links]]
+href = "https://kernel.org/"
+icon = "/static/images/tux.svg"
+label = "Visit kernel.org"
+
+[[extra.badges]]
+label = "Gianni Rosato"
+href = "https://giannirosato.com"
+webp = "/static/images/88x31/gb82_88x31.webp"
+jxl = "/static/images/88x31/gb82_88x31.jxl"
+
+[[extra.badges]]
+label = "Jinhee"
+href = "https://jinhee.art/"
+webp = "/static/images/88x31/jinhee.webp"
+
+[[extra.badges]]
+label = "Haylin"
+href = "https://hayl.in/"
+webp = "/static/images/88x31/haylin.webp"
+
+[[extra.badges]]
+label = "Jordane Day"
+href = "https://jordane.day/"
+webp = "/static/images/88x31/jordan.webp"
+
+[[extra.badges]]
+label = "Lukas Holliger"
+href = "https://holliger.me/"
+webp = "/static/images/88x31/lukas.webp"
+jxl = "/static/images/88x31/lukas.jxl"
+
+[[extra.badges]]
+label = "Linux"
+href = "https://kernel.org/"
+webp = "/static/images/88x31/penguins.webp"
+
+[[extra.badges]]
+label = "Varun"
+href = "https://varun.ch/"
+webp = "/static/images/88x31/varun.ch.webp"
+jxl = "/static/images/88x31/varun.ch.jxl"
+
+[[extra.badges]]
+label = "Mac"
+href = "https://www.apple.com/mac/"
+webp = "/static/images/88x31/mac.webp"
+jxl = "/static/images/88x31/mac.jxl"
+
+[[extra.badges]]
+label = "SVT-AV1-PSY"
+href = "https://svt-av1-psy.com/"
+webp = "/static/images/88x31/psy_88x31.webp"
+jxl = "/static/images/88x31/psy_88x31.jxl"
+
+[[extra.badges]]
+label = "GitHub"
+href = "https://github.com/gianni-rosato"
+webp = "/static/images/88x31/github.webp"
+jxl = "/static/images/88x31/github.jxl"
+
+[[extra.badges]]
+label = "Zig"
+href = "https://ziglang.org/"
+webp = "/static/images/88x31/ziglang.webp"
+jxl = "/static/images/88x31/ziglang.jxl"
+
+[[extra.badges]]
+label = "Matrix"
+href = "https://matrix.to/#/@computerbustr:matrix.org"
+webp = "/static/images/88x31/matrix.webp"
+jxl = "/static/images/88x31/matrix.jxl"
+
+[[extra.badges]]
+label = "Ezri"
+href = "https://ezri.pet/"
+webp = "/static/images/88x31/ezri.webp"
+jxl = "/static/images/88x31/ezri.jxl"
+
+[[extra.badges]]
+label = "Renata"
+href = "https://sewergirl.neocities.org/"
+webp = "/static/images/88x31/renata.webp"
+
+[[extra.badges]]
+label = "Zed"
+href = "https://zed.dev/"
+webp = "/static/images/88x31/zed.webp"
+jxl = "/static/images/88x31/zed.jxl"
+
+[[extra.badges]]
+label = "JPEG XL"
+href = "https://jpegxl.info/"
+webp = "/static/images/88x31/jpegxl.webp"
+jxl = "/static/images/88x31/jpegxl.jxl"
+
+[[extra.badges]]
+label = "Arch Linux"
+href = "https://archlinux.org/"
+webp = "/static/images/88x31/archlinux.webp"
+jxl = "/static/images/88x31/archlinux.jxl"
+
+[[extra.badges]]
+label = "Fediverse"
+href = "https://disobey.net/@gianni"
+webp = "/static/images/88x31/fediverse.webp"
+
+[[extra.badges]]
+label = "Codec Wiki"
+href = "https://wiki.x266.mov/"
+webp = "/static/images/88x31/codecwiki.webp"
+jxl = "/static/images/88x31/codecwiki.jxl"
+
+[[extra.badges]]
+label = "Waterfox"
+href = "https://www.waterfox.net/"
+webp = "/static/images/88x31/waterfox.webp"
+jxl = "/static/images/88x31/waterfox.jxl"
+
+[[extra.badges]]
+label = "88x31"
+href = "https://eightyeightthirty.one/"
+webp = "/static/images/88x31/88x31.webp"
+jxl = "/static/images/88x31/88x31.jxl"
+
+[[extra.badges]]
+label = "Bluesky"
+href = "https://bsky.app/profile/giannirosato.com"
+webp = "/static/images/88x31/bluesky.webp"
+jxl = "/static/images/88x31/bluesky.jxl"
+
+[[extra.badges]]
+label = "Sam Randa"
+href = "https://samranda.com/"
+webp = "/static/images/88x31/samranda.webp"
+jxl = "/static/images/88x31/samranda.jxl"
