@@ -19,7 +19,7 @@ line. It does not share any "DNA" with this article's rAV1ator.
 
 ### Manifesto
 
-[rAV1ator](https://wiki.x266.mov/docs/utilities/rAV1ator) was designed to make
+[rAV1ator](https://codecs.wiki/docs/utilities/rAV1ator) was designed to make
 AV1 encoding accessible to the average person, but with the intention to teach
 someone who is a total beginner the ins & outs of encoding AV1 videos. You can
 install it by running

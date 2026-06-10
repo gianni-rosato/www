@@ -7,7 +7,7 @@ Here's a (mostly) exhaustive list of open source projects I've started or was/am
 
 - [SVT-AV1-PSY](https://svt-av1-psy.com/), a fork of the SVT-AV1 encoder with a focus on perceptual quality
 - [SVT-AV1](https://gitlab.com/AOMediaCodec/SVT-AV1/), the production encoder for the AV1 video codec
-- [The Codec Wiki](https://wiki.x266.mov/), a public resource for digital compression knowledge
+- [The Codec Wiki](https://codecs.wiki/), a public resource for digital compression knowledge
 - [`metrics`](https://github.com/psy-ex/metrics), a video encoder benchmarking tool
 - [Aviator](https://github.com/gianni-rosato/aviator), a GUI for encoding AV1 video with Opus audio
 - [oavif](https://github.com/gianni-rosato/oavif), a new approach to target quality encoding in image compression

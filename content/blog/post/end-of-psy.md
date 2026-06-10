@@ -47,8 +47,8 @@ read more about these elsewhere). x264 and x265 are very mature encoders for
 older formats, so mainstream AV1 encoders haven't had the same level of
 development in this area. This helped aom-av1-psy become very popular among AV1
 enthusiasts, and its legacy lives on in the form of two newer forks:
-[aom-av1-lavish](https://wiki.x266.mov/docs/encoders/aom-av1-lavish) (retired as
-of June 2024) and [aom-psy101](https://wiki.x266.mov/docs/encoders/aom-psy101)
+[aom-av1-lavish](https://codecs.wiki/docs/encoders/aom-av1-lavish) (retired as
+of June 2024) and [aom-psy101](https://codecs.wiki/docs/encoders/aom-psy101)
 (still maintained at the time of writing).
 
 Usually, forks were maintained by a single individual – all of the forks I've
@@ -107,7 +107,7 @@ code, and we also attracted the attention of Clybius – the maintainer of
 aom-av1-lavish – who stopped working on his aom-av1-psy fork to join us. Trix, a
 noteworthy encoder known for their work with animation, also joined the team and
 provided us with a lot of valuable feedback through their extensive testing in
-the [SVT-AV1 Deep Dive](https://wiki.x266.mov/blog/svt-av1-third-deep-dive) blog
+the [SVT-AV1 Deep Dive](https://codecs.wiki/blog/svt-av1-third-deep-dive) blog
 series.
 
 I could not have asked for a better group of people to work with. The amount I

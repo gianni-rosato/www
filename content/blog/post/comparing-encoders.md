@@ -24,10 +24,10 @@ with the XYB colorspace used in JPEG XL, it can be very cool stuff).
 
 This article is more about what we can do now with the tools that we have,
 regardless of the metric we're interested in. Many people, including the SVT-AV1
-team, make use of [PSNR](https://wiki.x266.mov/docs/metrics/PSNR),
-[SSIM](https://wiki.x266.mov/docs/metrics/SSIM), and
-[VMAF](https://wiki.x266.mov/docs/metrics/VMAF), but today we're going to be
-(mainly) focusing on [XPSNR](https://wiki.x266.mov/docs/metrics/XPSNR), a
+team, make use of [PSNR](https://codecs.wiki/docs/metrics/PSNR),
+[SSIM](https://codecs.wiki/docs/metrics/SSIM), and
+[VMAF](https://codecs.wiki/docs/metrics/VMAF), but today we're going to be
+(mainly) focusing on [XPSNR](https://codecs.wiki/docs/metrics/XPSNR), a
 perceptual metric by Fraunhofer HHI that is readily available in FFmpeg 7.1.
 
 Now that we have established the problem space, we can talk about:
@@ -89,7 +89,7 @@ You'll notice that this is a lot more than just a single data point. We're just
 supposed to compare two videos and get a number for how the encode looks, right?
 Ideally, yes, but with the imperfect tools we have, we must do the best we can.
 
-[SSIMULACRA2](https://wiki.x266.mov/docs/metrics/SSIMULACRA2)
+[SSIMULACRA2](https://codecs.wiki/docs/metrics/SSIMULACRA2)
 
 - The average, or the arithmetic mean, is simple; now we know how our frames
   look, on average, according to an image metric.

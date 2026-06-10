@@ -23,7 +23,7 @@ I think this use case has been neglected because it sits in an awkward spot, stu
 
 ## Metric
 
-There are good metrics and bad metrics in the context of what humans care about in images. [PSNR](https://wiki.x266.mov/docs/metrics/PSNR) is a bad metric; targeting a PSNR score doesn't mean anything to users, because images at the same PSNR could look completely different. However, PSNR is very fast, and faster metrics lend themselves more favorably to target quality encoding.
+There are good metrics and bad metrics in the context of what humans care about in images. [PSNR](https://codecs.wiki/docs/metrics/PSNR) is a bad metric; targeting a PSNR score doesn't mean anything to users, because images at the same PSNR could look completely different. However, PSNR is very fast, and faster metrics lend themselves more favorably to target quality encoding.
 
 [SSIMULACRA2](https://github.com/cloudinary/ssimulacra2) correlates highly with subjective human quality ratings, but it is comparatively slow compared to simpler metrics. I set out to remedy this with [fssimu2](https://github.com/gianni-rosato/fssimu2), a faster implementation that uses almost 40% less memory. This is what oavif uses, and it makes computing the in-loop metric much faster compared to the reference library.
 

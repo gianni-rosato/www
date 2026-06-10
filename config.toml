@@ -163,7 +163,7 @@ webp = "/static/images/88x31/fediverse.webp"
 
 [[extra.badges]]
 label = "Codec Wiki"
-href = "https://wiki.x266.mov/"
+href = "https://codecs.wiki/"
 webp = "/static/images/88x31/codecwiki.webp"
 jxl = "/static/images/88x31/codecwiki.jxl"
 
