@@ -8,13 +8,15 @@ Here's a (mostly) exhaustive list of open source projects I've started or was/am
 - [SVT-AV1-PSY](https://svt-av1-psy.com/), a fork of the SVT-AV1 encoder with a focus on perceptual quality
 - [SVT-AV1](https://gitlab.com/AOMediaCodec/SVT-AV1/), the production encoder for the AV1 video codec
 - [The Codec Wiki](https://codecs.wiki/), a public resource for digital compression knowledge
+- [fmetrics](https://github.com/halidecx/fmetrics), faster perceptual fidelity metrics ([blog](https://halide.cx/blog/fmetrics/))
 - [`metrics`](https://github.com/psy-ex/metrics), a video encoder benchmarking tool
 - [Aviator](https://github.com/gianni-rosato/aviator), a GUI for encoding AV1 video with Opus audio
 - [oavif](https://github.com/gianni-rosato/oavif), a new approach to target quality encoding in image compression
 - [fssimu2](https://github.com/gianni-rosato/fssimu2), a fast SSIMULACRA2 implementation in Zig
 - [fcvvdp](https://github.com/halidecx/fcvvdp), an efficient CVVDP implementation in C
-- [qoi-enc-zig](https://github.com/gianni-rosato/qoi-enc-zig), a fast encoder for the QOI lossless image codec written in Zig
-- [qoi-dec-zig](https://github.com/gianni-rosato/qoi-dec-zig), a fast decoder for the QOI lossless image codec written in Zig
+- [simpleimgio](https://github.com/gianni-rosato/simpleimgio), I/O for simple image formats in Zig
+- [qoilib](https://github.com/gianni-rosato/qoilib), a [QOI](https://qoiformat.org/) implementation written in Zig
+- [mos-correlation](https://github.com/gianni-rosato/mos-correlation), a tool that shows how well image quality metrics correlate with human scores
 - [This website](https://github.com/gianni-rosato/www)
 - [An Analysis of Compression Technologies Used in the Delivery of Internet Video](https://github.com/gianni-rosato/An-Analysis-of-Compression-Technologies-Used-in-the-Delivery-of-Internet-Video), a research paper I authored under the mentorship of [Luc Trudeau](https://trud.ca) alongside my university
 - [photodetect2](https://github.com/gianni-rosato/photodetect2), an implementation of SVT-AV1-PSY's photographic image detection algorithm in Zig
