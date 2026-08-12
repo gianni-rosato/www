@@ -17,4 +17,4 @@ Some of what I have worked on:
 
 I also enjoy working on [open-source projects](/projects/) (see [my GitHub](https://github.com/gianni-rosato)).
 
-I do contract work and build Iris-WebP at my company, [Halide Compression](https://halide.cx).
+I build multimedia compression tech at my company, [Halide Compression](https://halide.cx).
