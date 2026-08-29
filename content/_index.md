@@ -6,7 +6,7 @@ description = "Hi, I'm Gianni. I build video & image compression technology for 
 
 **Hi, I'm Gianni.** I build video & image compression technology for a more beautiful Internet.
 
-{{ line() }}
+{{ <line /> }}
 
 Some of what I have worked on:
 

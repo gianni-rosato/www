@@ -7,8 +7,7 @@ The best open source video and image compression algorithms have improved signif
 
 <!-- more -->
 
-{{ hero(src="/static/img/leaves.avif", width="1536", height="864", alt="Green
-Leaves") }}
+{{ <hero src="/static/img/leaves.avif" width="1536" height="864" alt="Green Leaves" /> }}
 
 ## Purpose
 

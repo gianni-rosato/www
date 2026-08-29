@@ -7,7 +7,7 @@ Comparing video encoders involves using synthetic metrics to assess visual quali
 
 <!-- more -->
 
-{{ hero(src="/static/img/skygb.avif", width="1536", height="864", alt="Sky") }}
+{{ <hero src="/static/img/skygb.avif" width="1536" height="864" alt="Sky" /> }}
 
 ## Why?
 

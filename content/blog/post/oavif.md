@@ -7,7 +7,7 @@ oavif is a new approach to target quality encoding in image compression, designe
 
 <!-- more -->
 
-{{ hero(src="/static/img/waves.avif", width="1536", height="864", alt="Waves Crashing") }}
+{{ <hero src="/static/img/waves.avif" width="1536" height="864" alt="Waves Crashing" /> }}
 
 ## Why?
 
@@ -17,7 +17,7 @@ The value of target quality encoding is perceptual consistency. If I rely entire
 
 [**oavif**](https://github.com/gianni-rosato/oavif) is a tool to do target quality encoding extremely quickly. There are three core components to a target quality encoding framework: the metric, the encoder, and the convergence algorithm. oavif aims to leverage or improve the state of the art in all three categories.
 
-{{ inline_btn(url="https://github.com/gianni-rosato/oavif", text="Source Code") }}
+{{ <inline_btn url="https://github.com/gianni-rosato/oavif" text="Source Code" /> }}
 
 I think this use case has been neglected because it sits in an awkward spot, stuck between encoder development and content deployment. Considering image encoders and powerful metrics are fast, it is easy to take them for granted and build inefficient frameworks around them. Slow frameworks waste valuable resources; processing images is expensive. I built oavif with the same approach I've adopted when building encoders, where every CPU cycle counts.
 

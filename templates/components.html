@@ -1,0 +1,40 @@
+{% component line() %}
+<div class="home-line"></div>
+{% endcomponent line %}
+
+{% component hero(src, width="", height="", alt="") %}
+<div class="image-container">
+  <picture>
+    <img
+      src="{{ get_url(path=src) }}"
+      width="{{ width }}"
+      height="{{ height }}"
+      alt="{{ alt }}"
+    />
+  </picture>
+</div>
+{% endcomponent hero %}
+
+{% component inline_btn(url="", text="") %}
+<div class="inline-button">
+  {% set label = text | default(value=url | default(value="Link")) %}
+  <a href="{{ url }}" target="_blank" rel="noopener noreferrer" class="pill-btn" aria-label="{{ label }}">{{ text }}</a>
+</div>
+{% endcomponent inline_btn %}
+
+{% component gallery_img(src, fb, type="jxl", alt="") %}
+{% if alt != "" %}
+{% set image_alt = alt %}
+{% else %}
+{% set image_name = fb | split(pat="/") | last | split(pat=".") | first %}
+{% set image_alt = "Gallery image " ~ image_name %}
+{% endif %}
+<picture>
+  <source srcset="{{ get_url(path=src) }}" type="image/{{ type }}" />
+  <img
+      src="{{ get_url(path=fb) }}"
+      loading="lazy"
+      alt="{{ image_alt }}"
+  />
+</picture>
+{% endcomponent gallery_img %}
