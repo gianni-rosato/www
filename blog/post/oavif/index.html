@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <base target="_self" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script
+      defer
+      src="https://cloud.umami.is/script.js"
+      data-website-id="ed9fd2cd-67dd-4524-ad11-1810fb677e29"
+    ></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="https://giannirosato.com/atom.xml">
+    <link href="https://giannirosato.com/main.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/blog.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/code.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/favicon.webp" rel="icon">
+    <title>
+      Introducing oavif | Gianni Rosato
+    </title>
+    <meta name="description" content="oavif is a new approach to target quality encoding in image compression, designed around smarter convergence strategies and quicker scoring to be as fast as possible.">
+    <meta property="og:type" content="article">
+  </head>
+
+  <body>
+    <main aria-label="Introducing oavif">
+      <div class="container">
+        
+<article class="blog-post">
+  <header class="blog-post-header">
+    <div class="blog-post-meta">
+      <time>October 12, 2025</time>
+      <span class="author">Gianni Rosato</span>
+    </div>
+    <nav class="nav-buttons" aria-label="Post navigation">
+      <a href="https://giannirosato.com/blog/" class="pill-btn" aria-label="Back to the blog">Back</a>
+      <a href="https://giannirosato.com/" class="pill-btn" aria-label="Go to the home page">Home</a>
+    </nav>
+    <h1 class="blog-post-title">
+      Introducing oavif
+    </h1>
+  </header>
+
+  <div class="blog-post-content">
+    <p>oavif is a new approach to target quality encoding in image compression, designed around smarter convergence strategies and quicker scoring to be as fast as possible.</p>
+<span id="continue-reading"></span><div class="image-container">
+  <picture>
+    <img
+      src="https://giannirosato.com/static/img/waves.avif"
+      width="1536"
+      height="864"
+      alt="Waves Crashing"
+    />
+  </picture>
+</div>
+<h2 id="why">Why?</h2>
+<p>Target quality encoding is one of the highest impact use cases for image compression. A target quality encoder framework aims to produce an image encoded at a particular quality set by the user according to some metric or visual quality index. This kind of encoder framework is useful for a variety of users, ranging from small website owners to content delivery networks pushing vast quantities of image data through the Web.</p>
+<p>The value of target quality encoding is perceptual consistency. If I rely entirely on my encoder's internal quality index (often set with a "q" parameter), I may not get outputs of perfectly consistent quality when using the same "q" across different images. Relying on a metric that represents the viewer's experience is the solution to this; targeting a representative score within this metric will ensure you always receive an optimally encoded file that never undershoots and ruins image quality, and never overshoots and wastes data.</p>
+<p><a rel="external" href="https://github.com/gianni-rosato/oavif"><strong>oavif</strong></a> is a tool to do target quality encoding extremely quickly. There are three core components to a target quality encoding framework: the metric, the encoder, and the convergence algorithm. oavif aims to leverage or improve the state of the art in all three categories.</p>
+<div class="inline-button">
+<p><a href="https://github.com/gianni-rosato/oavif" target="_blank" rel="noopener noreferrer" class="pill-btn" aria-label="Source Code">Source Code</a></p>
+</div>
+<p>I think this use case has been neglected because it sits in an awkward spot, stuck between encoder development and content deployment. Considering image encoders and powerful metrics are fast, it is easy to take them for granted and build inefficient frameworks around them. Slow frameworks waste valuable resources; processing images is expensive. I built oavif with the same approach I've adopted when building encoders, where every CPU cycle counts.</p>
+<h2 id="metric">Metric</h2>
+<p>There are good metrics and bad metrics in the context of what humans care about in images. <a rel="external" href="https://codecs.wiki/docs/metrics/PSNR">PSNR</a> is a bad metric; targeting a PSNR score doesn't mean anything to users, because images at the same PSNR could look completely different. However, PSNR is very fast, and faster metrics lend themselves more favorably to target quality encoding.</p>
+<p><a rel="external" href="https://github.com/cloudinary/ssimulacra2">SSIMULACRA2</a> correlates highly with subjective human quality ratings, but it is comparatively slow compared to simpler metrics. I set out to remedy this with <a rel="external" href="https://github.com/gianni-rosato/fssimu2">fssimu2</a>, a faster implementation that uses almost 40% less memory. This is what oavif uses, and it makes computing the in-loop metric much faster compared to the reference library.</p>
+<p>Testing on a <a rel="external" href="https://files.catbox.moe/ott1x0.png">4k test image</a> against a <a rel="external" href="https://files.catbox.moe/xpab87.jpg">distorted sample</a> for an average time to score across 8 runs, Butteraugli (a perceptual metric from the <a rel="external" href="https://github.com/libjxl/libjxl">libjxl</a> project) took 2455ms, while the reference SSIMULACRA2 implementation took 1162ms. fssimu2 takes 631.9ms. Testing was done on my M2 MacBook Air using <a rel="external" href="https://github.com/sharkdp/hyperfine"><code>hyperfine</code></a>.</p>
+<p><img src="/static/img/fssimu2.svg" alt="fssimu2 performance graph" /></p>
+<h2 id="encoder">Encoder</h2>
+<p>AVIF is a capable Web image format. oavif uses <a rel="external" href="https://aomedia.googlesource.com/aom/">libaom</a> (via <a rel="external" href="https://github.com/AOMediaCodec/libavif">libavif</a>) because it is the best open-source image encoder available relative to its speed. I worked on <a rel="external" href="https://halide.cx/blog/improving-avif-in-open-source/">improving AVIF encoding</a> in 2024 during my work on <a rel="external" href="http://svt-av1-psy.com">SVT-AV1-PSY</a>. Google (with help from <a rel="external" href="http://juliobbv.com">Julio Barba</a>) later adopted this work and advanced it further in libaom. It is now used by some websites you may know, such as <em><a rel="external" href="http://theguardian.com">The Guardian</a></em>.</p>
+<p>Aside from speed, <a rel="external" href="https://halide.cx/blog/consistency/">encoder consistency</a> is valuable in the context of target quality encoding (I'll explain more about why later). In fact, a perfectly consistent encoder would be able to eliminate the need for targeting entirely since the encoder's user-configurable Q would map perfectly to some perceptual index. libaom has had engineering effort go into encoder consistency, which is a valuable thing.</p>
+<h2 id="convergence">Convergence</h2>
+<p>A simple convergence loop looks like this:</p>
+<ul>
+<li>Decode input, pass to encoder</li>
+<li>Decode encoder output &amp; compare to input with metric</li>
+<li>If we hit the target metric score, finish; otherwise, repeat prev. step with modified settings</li>
+</ul>
+<p>The most important part here is how we decide to modify our settings. This is the convergence algorithm that allows us to search for the best encoder Q. The easiest way to do this is with <a rel="external" href="https://en.wikipedia.org/wiki/Binary_search">binary search</a>, and some more recent implementations have utilized <a rel="external" href="https://github.com/rust-av/Av1an/pull/1014">clever interpolation</a> using past data to inform the next guess based on the fact that we know encoder Q and target score are likely correlated.</p>
+<p>oavif takes inspiration from both of these, adding predictive modeling alongside error-informed search space correction to improve search times significantly. To understand why, we'll walk through each stage of the implementation.</p>
+<h3 id="binary-search">Binary Search</h3>
+<p>This testing was done using the <a rel="external" href="https://github.com/WyohKnott/image-formats-comparison/tree/gh-pages/comparisonfiles/subset2/Original">Daala subset2</a> image dataset. Importantly, I only used this dataset for validation; oavif was not designed around this specific dataset in any way. When testing, the oavif configuration was left at defaults; only the convergence implementation was modified. The threshold for meeting the target score is ±2.0 in oavif by default, and the default target score is 80.0 as measured by fssimu2 because it is a reasonable "high fidelity" target.</p>
+<p>Everyone with some algorithms background will start with binary search. Set your bounds for encoder Q to 0..100, and divide the range in half each time you test. In oavif, a pure binary search implementation at default settings yields the following results:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="plain"><span class="giallo-l"><span>Average encoding time: 467.95 ms ± 94.64</span></span>
+<span class="giallo-l"><span>Average passes: 3.20 ± 0.45 (max: 4 min: 2)</span></span></code></pre><h3 id="interpolation">Interpolation</h3>
+<p>Interpolation-based target quality searches by iteratively probing, measuring, and narrowing the search interval just like binary search. The difference is that it tries to model the score-vs-quantizer curve with interpolation (linear, quadratic, etc) as more data is accumulated. This should theoretically reduce the number of necessary encodes, and can start with standard binary search when there is not enough data to interpolate with.</p>
+<p>Metric score vs encoder Q is generally (though not perfectly) a mostly monotonic curve. Interpolation-based inverse estimation uses the measured points to approximate that curve and solve for the quantizer that would produce the target score. Higher-order methods use more shape information and are thus theoretically more accurate. Adding linear and quadratic interpolation support to oavif, we see a small reduction in the average number of passes on subset2:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="plain"><span class="giallo-l"><span>Average encoding time: 468.98 ms ± 97.28</span></span>
+<span class="giallo-l"><span>Average passes: 3.12 ± 0.39 (max: 4 min: 2)</span></span></code></pre>
+<p>This is a 2.5% improvement. We still need a minimum of two passes to accurately target.</p>
+<h3 id="predictive-modeling">Predictive Modeling</h3>
+<p>This feature uses an exponential curve trained on the <a rel="external" href="https://github.com/gianni-rosato/gb82-image-set">gb82 image dataset</a> with libaom (at speed 9, 10-bit, 4:4:4 chroma). The curve looks like this:</p>
+<p><img src="/static/img/libaom-pred.svg" alt="libaom predicted Q from SSIMULACRA2 curve" /></p>
+<p>Based on this, we can write some very simple code to predict a Q value from the target score:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #CB7676;">fn</span><span style="color: #80A665;"> predictQFromScore</span><span>(</span><span style="color: #BD976A;">tgt</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> f64</span><span>) </span><span style="color: #4D9375;">u32</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> q</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 6.83</span><span style="color: #CB7676;"> *</span><span style="color: #B8A965;"> @exp</span><span>(</span><span style="color: #4C9A91;">0.0282</span><span style="color: #CB7676;"> *</span><span style="color: #BD976A;"> tgt</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    return</span><span style="color: #B8A965;"> @intFromFloat</span><span>(</span><span style="color: #B8A965;">@min</span><span>(</span><span style="color: #4C9A91;">100.0</span><span style="color: #444444;">,</span><span style="color: #B8A965;"> @round</span><span>(</span><span style="color: #BD976A;">q</span><span>)))</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>This yields the biggest average improvement in this testing so far, decreasing average pass count by 56.4% versus interpolation search and 57.5% versus binary search.</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="plain"><span class="giallo-l"><span>Average encoding time: 218.33 ms ± 114.16</span></span>
+<span class="giallo-l"><span>Average passes: 1.36 ± 0.78 (max: 3 min: 1)</span></span></code></pre>
+<p>The gb82 image set is fairly low-resolution mixed photographic content, while Daala subset2 is medium-resolution photographic content with less variation. The fact that the model generalizes so well is exciting.</p>
+<p>It is at this stage that encoder consistency becomes important. A more consistent encoder will diverge from our model's predictions less frequently, and theoretically result in a faster target quality loop.</p>
+<h3 id="error-bounds">Error Bounds</h3>
+<p>Because our initial predictions tend to be so accurate, we can use them to aggressively narrow our search space without incurring too much risk of a search space collapse.</p>
+<p>The basis of this is that utilizing plain binary search with prediction is often unreliable. Let's say we would like to target score=80, and our model predicts we need Q=65. We score 82.38. Now we are forced to search (0..65), which is worse than if we had just avoided prediction in the first place (our search space would be 50..100 in that case). This is in spite of the fact that our prediction was very close to the target.</p>
+<p>oavif uses the distance from the target to its advantage:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #4D9375;">const</span><span style="color: #BD976A;"> abs_err</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @abs</span><span>(</span><span style="color: #BD976A;">e</span><span style="color: #444444;">.</span><span style="color: #BD976A;">t</span><span style="color: #444444;">.</span><span style="color: #BD976A;">score</span><span style="color: #CB7676;"> -</span><span style="color: #BD976A;"> o</span><span style="color: #444444;">.</span><span style="color: #BD976A;">score_tgt</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">if</span><span> (</span><span style="color: #BD976A;">pass</span><span style="color: #CB7676;"> ==</span><span style="color: #4C9A91;"> 0</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> err_bound</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u32</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @intFromFloat</span><span>(</span><span style="color: #B8A965;">@ceil</span><span>(</span><span style="color: #BD976A;">abs_err</span><span>) </span><span style="color: #CB7676;">*</span><span style="color: #4C9A91;"> 4.0</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    if</span><span> (</span><span style="color: #BD976A;">e</span><span style="color: #444444;">.</span><span style="color: #BD976A;">t</span><span style="color: #444444;">.</span><span style="color: #BD976A;">score</span><span style="color: #CB7676;"> -</span><span style="color: #BD976A;"> o</span><span style="color: #444444;">.</span><span style="color: #BD976A;">score_tgt</span><span style="color: #CB7676;"> &gt;</span><span style="color: #4C9A91;"> 0</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        hi_bound</span><span style="color: #444444;"> =</span><span style="color: #BD976A;"> e</span><span style="color: #444444;">.</span><span style="color: #BD976A;">q</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        lo_bound</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> if</span><span> (</span><span style="color: #BD976A;">e</span><span style="color: #444444;">.</span><span style="color: #BD976A;">q</span><span style="color: #CB7676;"> &gt;</span><span style="color: #BD976A;"> err_bound</span><span>) </span><span style="color: #BD976A;">e</span><span style="color: #444444;">.</span><span style="color: #BD976A;">q</span><span style="color: #CB7676;"> -</span><span style="color: #BD976A;"> err_bound</span><span style="color: #4D9375;"> else</span><span style="color: #4C9A91;"> 0</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>    } </span><span style="color: #4D9375;">else</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        lo_bound</span><span style="color: #444444;"> =</span><span style="color: #BD976A;"> e</span><span style="color: #444444;">.</span><span style="color: #BD976A;">q</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        hi_bound</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @min</span><span>(</span><span style="color: #4C9A91;">100</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> e</span><span style="color: #444444;">.</span><span style="color: #BD976A;">q</span><span style="color: #CB7676;"> +</span><span style="color: #BD976A;"> err_bound</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>In this case, the error was 2.38; <code>@ceil()</code> brings this to 3, and we multiply by 4 because the midpoint of the new range tends to be very close to the target value based on my testing. The performance improves in kind:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="plain"><span class="giallo-l"><span>Average encoding time: 194.50 ms ± 69.89</span></span>
+<span class="giallo-l"><span>Average passes: 1.18 ± 0.39 (max: 2 min: 1)</span></span></code></pre>
+<p>This costs 13.2% fewer passes than interpolation + prediction, and 63.1% fewer passes than binary search.</p>
+<p><img src="/static/img/oavif-passes.svg" alt="oavif Convergence Passes" /></p>
+<p>The minimum number of passes necessary in a naive binary search or interpolation-informed search is now the maximum number of passes we need to converge on the target on Daala subset2. You'll also notice the standard deviation went down due to the fact that the ceiling has been lowered.</p>
+<h2 id="architecture">Architecture</h2>
+<p>We've made it work and we've made it good, so now we can make it fast. oavif is written in Zig, and uses available high-performance C decoder libraries for handling inputs and decoding AVIF in the convergence loop. All image I/O during convergence is done in memory, and a buffer is kept of our latest encode to write to a file if we meet the target in the search space.</p>
+<p>Efforts have gone into making oavif comparable to libavif's <code>avifenc</code> in terms of features as well. It supports high bit depth I/O, ICC profile handling for most formats, user-configurable encoder settings, and better defaults (until tune=iq becomes the libaom default in libavif).</p>
+<h2 id="future-directions">Future Directions</h2>
+<p>Architecturally, it would be trivial to keep a history of buffers active and always pick from the history, even if our loop doesn't converge on the target. I opted to avoid this for now because it dramatically increases memory usage, but if I receive widespread feedback that memory is unimportant I'll consider an implementation. In its current state, we hit the in-loop buffer the vast majority of the time anyway.</p>
+<p>I think the future of this kind of workflow is far more accurate predictive modeling. I believe it is possible to improve what I've done if we provide details about the source image as another term in the equation (like variance or entropy) and train our prediction mechanism on this additional data. I'm optimistically convinced this could result in a very high success rate for one-shot targeting.</p>
+<p>I'm looking forward to seeing more target quality workflows taking advantage of smarter targeting. If you've made it this far, thanks for reading, and enjoy oavif!</p>
+
+  </div>
+</article>
+
+      </div>
+      <footer class="foot" aria-label="Site footer">
+        &copy; 2026 Gianni Rosato. All Rights Reserved. | <a href="https://giannirosato.com/privacy/" aria-label="Read the privacy policy">Privacy Policy</a>
+      </footer>
+    </main>
+  </body>
+</html>

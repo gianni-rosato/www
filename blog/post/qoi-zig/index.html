@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <base target="_self" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script
+      defer
+      src="https://cloud.umami.is/script.js"
+      data-website-id="ed9fd2cd-67dd-4524-ad11-1810fb677e29"
+    ></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="https://giannirosato.com/atom.xml">
+    <link href="https://giannirosato.com/main.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/blog.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/code.css" rel="stylesheet" />
+    <link href="https://giannirosato.com/favicon.webp" rel="icon">
+    <title>
+      QOI Encoding in Zig | Gianni Rosato
+    </title>
+    <meta name="description" content="Writing a fast and simple QOI encoder; illustrated with code examples, a spec breakdown, and step by step implementation instructions.">
+    <meta property="og:type" content="article">
+  </head>
+
+  <body>
+    <main aria-label="QOI Encoding in Zig">
+      <div class="container">
+        
+<article class="blog-post">
+  <header class="blog-post-header">
+    <div class="blog-post-meta">
+      <time>March 13, 2024</time>
+      <span class="author">Gianni Rosato</span>
+    </div>
+    <nav class="nav-buttons" aria-label="Post navigation">
+      <a href="https://giannirosato.com/blog/" class="pill-btn" aria-label="Back to the blog">Back</a>
+      <a href="https://giannirosato.com/" class="pill-btn" aria-label="Go to the home page">Home</a>
+    </nav>
+    <h1 class="blog-post-title">
+      QOI Encoding in Zig
+    </h1>
+  </header>
+
+  <div class="blog-post-content">
+    <p>Writing a fast and simple QOI encoder; illustrated with code examples, a spec breakdown, and step by step implementation instructions.</p>
+<span id="continue-reading"></span>
+<p><em>Note: the code for this project on GitHub has changed, but all of my commentary
+here remains valid.</em></p>
+<h2 id="why">Why?</h2>
+<p>I started writing C as my first programming language in October. While I have
+other projects labelled under the programming tag on this site, a friend was the
+lead developer on both, and I was just becoming familiar with Python; I never
+truly learned the concepts until later, as I hadn't needed to until I took over
+development for those projects. I had dabbled with Bash scripts, but other than
+that, I have had very limited programming exposure until recently, though I've
+had extensive exposure to technology. Becoming familiar with C quickly led me to
+discover Zig in November. Around the same time, I stumbled upon the QOI (Quite
+OK Image Format) lossless image format built around speed and simplicity. The
+simplicity part was what caught my eye; I'm a new programmer, and writing a QOI
+encoder would simultaneously allow me to get down and dirty with manipulating
+data on a low level without getting into the weeds of a more complicated spec
+like that of PNG.</p>
+<p>Here's the project link, before we get too carried away:
+<a rel="external" href="https://github.com/gianni-rosato/qoi-enc-zig">GitHub Link</a></p>
+<p>As soon as I got started with Zig, I already felt it was cool; Rust felt (and
+continues to feel) intimidating as I was becoming acquainted with C.
+"Higher-level" languages don't interest me very much.</p>
+<p>Full disclosure: I'm not going to go through <em>everything</em> here, and I may get
+some terminology details wrong. Please reach out to correct me if you notice
+anything.</p>
+<h2 id="zig">Zig</h2>
+<p>Zig is a programming language designed to be the modern replacement for C.</p>
+<p>I won't go over every advantage Zig brings to the table over other languages,
+but according to
+<a rel="external" href="https://ziglang.org/learn/why_zig_rust_d_cpp/">Zig's official site</a>, Zig has
+some unique advantages over languages like C++, D, and Rust:</p>
+<ol>
+<li><em>No hidden control flow or allocations</em>: Zig code is explicit about function
+calls and memory allocation, so readability is improved and the programmer
+has more control.</li>
+<li><em>First-class support for no standard library</em>: Zig can be used without any
+standard library, making it friendly for bare-metal and high-performance
+development.</li>
+<li><em>A portable language for libraries</em>: Zig aims to be a new portable language
+for libraries, interacting well with C code while introducing safety and
+better language design.</li>
+<li><em>A package manager and build system</em>: Zig comes with a capable build system
+and package manager, useful even for existing C/C++ projects.</li>
+<li><em>Simplicity</em>: Zig avoids unclear features like macros and operator
+overloading found in other languages.</li>
+<li><em>Tooling</em>: Zig provides a comprehensive toolchain with cross-compilation
+(which is very cool), C/C++ support, resource compiler, and more, packaged in
+a single archive.</li>
+</ol>
+<p>Zig positions itself as a simpler, more explicit, more portable language than
+C++, D, and Rust while offering more powerful tooling, which is all fine and
+dandy, but I'm not super familiar with Rust, D, or C++. Compared to C, Zig's
+additional safety features like safety-checked undefined behavior and the
+<code>defer</code> keyword to prevent issues one could normally have with <code>free()</code> in C are
+what make Zig special and interesting to me. Its focus on simplicity and safety
+makes it a compelling choice for systems programming tasks, including working
+with multimedia codecs.</p>
+<h2 id="qoi-overview">QOI Overview</h2>
+<p>QOI is very cool because it is extremely simple while still being relatively
+efficient for a lossless image codec.</p>
+<blockquote>
+<p>A QOI file consists of a 14-byte header, followed by any number of data
+“chunks” and an 8-byte end marker.
+(<a rel="external" href="https://qoiformat.org/qoi-specification.pdf">spec</a>)</p>
+</blockquote>
+<p>QOI supports two colorspaces: Linear RGB &amp; sRGB with linear alpha. These do not
+affect the way pixels are encoded. Pixels (well, "chunks" according to the spec,
+but I find it more intuitive to call them pixels as that is how they are
+interpreted and represented on a screen) have either three or four channels;
+they are either RGB or RGBA. The QOI philosophy is that everything is
+byte-aligned, making it trivial to stream bytes to a decoder one at a time and
+have the decoder produce a usable output.</p>
+<p>QOI's lossless compression takes place via six main pixel types:</p>
+<ol start="0">
+<li>
+<p><code>SPEC_NAME</code> ("Name I Made Up"): Description from spec. I'm only making up a
+name so I can reference it elsewhere more easily.</p>
+</li>
+<li>
+<p><code>QOI_OP_RGB</code> ("RGB Pixels"): Full RGB pixel value using 8 bits for each of
+the red, green, and blue channels. The alpha channel is 255 in RGB images,
+and remains unchanged from the previous pixel.</p>
+</li>
+<li>
+<p><code>QOI_OP_RGBA</code> ("RGBA Pixels"): Full RGBA pixel value using 8 bits for each of
+the red, green, blue, &amp; alpha channels.</p>
+</li>
+<li>
+<p><code>QOI_OP_DIFF</code> ("Diff Pixels"): The difference between the current pixel and
+the previous pixel for the red, green, and blue channels are stored using 2
+bits for each channel. The differences are stored with a bias of 2 and wrap
+(so 1 minus 2 would be 255). The alpha channel remains unchanged.</p>
+</li>
+<li>
+<p><code>QOI_OP_LUMA</code> ("Luma Pixels"): These pixels encode the green channel
+difference from the previous pixel using 6 bits, and then encode the red and
+blue channel differences relative to the green channel difference using 4
+bits each. This allows for more efficient encoding of small color changes.
+The alpha channel remains unchanged.</p>
+</li>
+<li>
+<p><code>QOI_OP_RUN</code> ("Run Pixels"): These are the simplest, encoding a run-length of
+pixels that are identical to the previous pixel. The run length is stored
+using 6 bits with a bias of -1, allowing for runs of 1 to 62 pixels.</p>
+</li>
+<li>
+<p><code>QOI_OP_INDEX</code> ("Hashed Pixels"): These are stored by referencing a
+previously seen pixel value from a rolling array of 64 recent pixel values by
+using a simple hash on each pixel as it is identified. If another pixel
+matches a previously seen hash value in the array, the index of the
+referenced pixel is stored.</p>
+</li>
+</ol>
+<p>That's pretty much it! The entire spec is
+<a rel="external" href="https://qoiformat.org/qoi-specification.pdf">one page</a> if you'd like a bit more
+detail. Amazingly, QOI
+<a rel="external" href="https://qoiformat.org/benchmark/">trades blows with libpng's PNG encoding while being much faster</a>
+on average with the reference encoder given the test corpus the author used in
+that benchmark.</p>
+<h2 id="explaining-the-codebase">Explaining the Codebase</h2>
+<p>Now that I've done the requisite amount of shilling, it is time to get into the
+real content. I want this to be a thorough walk-through of my decisions writing
+this encoding implementation, so you can take inspiration from my work on your
+own if you are also new to Zig. Again, the source code for my project can be
+found at <a rel="external" href="https://github.com/gianni-rosato/qoi-enc-zig/">this git repository</a>.</p>
+<p>The program starts by importing the necessary standard library modules and
+defining the necessary data structures. The <code>QoiEnum</code> enum, for instance,
+defines the different opcodes used in the QOI format, such as <code>QOI_OP_RGB</code> and
+<code>QOI_OP_RGBA</code>:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #4D9375;">const</span><span style="color: #BD976A;"> QoiEnum</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> enum</span><span>(</span><span style="color: #4D9375;">u8</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    QOI_OP_RGB</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 0xFE</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    QOI_OP_RGBA</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 0xFF</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    QOI_OP_INDEX</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 0x00</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    QOI_OP_DIFF</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 0x40</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    QOI_OP_LUMA</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 0x80</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    QOI_OP_RUN</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 0xC0</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span>}</span><span style="color: #444444;">;</span></span></code></pre>
+<p>These are fundamental to the QOI format's compression techniques, which we'll
+explore in a bit.</p>
+<p>Next, we have the <code>QoiPixel</code> union, which represents a single pixel's color
+values. By using a union, we can access the pixel's channels (red, green, blue,
+alpha) individually through the <code>channels</code> array or the <code>vals</code> struct. We can
+also access them as a single unsigned 32-bit integer through
+<code>concatenated_pixel_values</code>:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #4D9375;">const</span><span style="color: #BD976A;"> QoiPixel</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> extern union</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    vals</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> extern struct</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        red</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        green</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        blue</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        alpha</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span>    }</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    channels</span><span style="color: #444444;">:</span><span> [</span><span style="color: #4C9A91;">4</span><span>]</span><span style="color: #4D9375;">u8</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    concatenated_pixel_values</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u32</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span>}</span><span style="color: #444444;">;</span></span></code></pre>
+<p>Important to note here is that the <code>extern</code> keyword defines the union (and the
+enclosed struct) as C ABI compatible data structures. In Zig's standard unions
+without the <code>extern</code> keyword, trying to access inactive fields of the union is
+safety-checked undefined behavior. Your code will compile successfully, but if
+you compiled in Safe mode (which you probably did by default with <code>zig build</code>)
+you'll get some runtime errors accompanied by a stack trace. I enjoy the fact
+that Zig allows you to use <code>extern union</code>s to essentially get different
+"viewpoints" on how to access the underlying data in memory while maintaining a
+different native paradigm; it is a testament to the language's ability to
+espouse flexibility while still providing a feeling of familiarity.</p>
+<p>The <code>QoiDesc</code> struct holds essential information about the image being encoded,
+including its dimensions, color channels, and colorspace, in order to write the
+header for the encoded file. This struct provides methods for assigning our
+instance of <code>QoiDesc</code> &amp; writing the QOI header to the output file:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #4D9375;">const</span><span style="color: #BD976A;"> QoiDesc</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> struct</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    width</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u32</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 0</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    height</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u32</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 0</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    channels</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 0</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    colorspace</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 0</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #CB7676;">    fn</span><span style="color: #80A665;"> qoiSetEverything</span><span>(</span><span style="color: #BD976A;">w</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u32</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> h</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u32</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> ch</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> c</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span>) </span><span style="color: #BD976A;">QoiDesc</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        return</span><span style="color: #BD976A;"> QoiDesc</span><span>{ </span><span style="color: #444444;">.</span><span style="color: #BD976A;">width</span><span style="color: #444444;"> =</span><span style="color: #BD976A;"> w</span><span style="color: #444444;">, .</span><span style="color: #BD976A;">height</span><span style="color: #444444;"> =</span><span style="color: #BD976A;"> h</span><span style="color: #444444;">, .</span><span style="color: #BD976A;">channels</span><span style="color: #444444;"> =</span><span style="color: #BD976A;"> ch</span><span style="color: #444444;">, .</span><span style="color: #BD976A;">colorspace</span><span style="color: #444444;"> =</span><span style="color: #BD976A;"> c</span><span> }</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #CB7676;">    fn</span><span style="color: #80A665;"> writeQoiHeader</span><span>(</span><span style="color: #BD976A;">self</span><span style="color: #444444;">:</span><span style="color: #BD976A;"> QoiDesc</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> dest</span><span style="color: #444444;">:</span><span style="color: #CB7676;"> *</span><span>[</span><span style="color: #4C9A91;">14</span><span>]</span><span style="color: #4D9375;">u8</span><span>) </span><span style="color: #4D9375;">void</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">        // ... (implementation omitted for brevity)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span><span style="color: #444444;">;</span></span></code></pre>
+<p>Struct methods in Zig are not super different from normal functions. According
+to Zig's website:</p>
+<blockquote>
+<p>Struct methods are not special, they are only namespaced functions that you
+can call with dot syntax.
+(<a rel="external" href="https://ziglang.org/documentation/master/#struct">1</a>)</p>
+</blockquote>
+<p>Using these within the scope of struct definitions is cool because it makes the
+codebase nice and neat. You can also call methods with dot syntax, which feels
+tidy:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #758575DD;">// Declare variable `desc` providing width, height, channels, colorspace.</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">// We can call this method using dot syntax on the type:</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    var</span><span style="color: #BD976A;"> desc</span><span style="color: #444444;"> =</span><span style="color: #BD976A;"> QoiDesc</span><span style="color: #444444;">.</span><span style="color: #80A665;">qoiSetEverything</span><span>(</span><span style="color: #BD976A;">width</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> height</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> channels</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> colorspace</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">// Now, we use dot syntax on the `desc` variable to call the</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">// `writeQoiHeader` method, where `desc` is passed to the method as `self`:</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    desc</span><span style="color: #444444;">.</span><span style="color: #80A665;">writeQoiHeader</span><span>(</span><span style="color: #BD976A;">qoi_file</span><span>[</span><span style="color: #4C9A91;">0</span><span style="color: #444444;">..</span><span style="color: #4C9A91;">14</span><span>])</span><span style="color: #444444;">;</span></span></code></pre>
+<p>You don't need to do <code>foo-&gt;bar</code> like in C, either; Zig will do that
+automatically if you just do <code>foo.bar</code>. I like this!</p>
+<p>The <code>QoiEnc</code> struct encapsulates the encoding logic. It maintains a pixel
+buffer, a run counter, and various other state variables necessary for the
+encoding process. The <code>qoiEncInit</code> method initializes the encoder with the image
+description &amp; an output buffer:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #4D9375;">const</span><span style="color: #BD976A;"> QoiEnc</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> struct</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    buffer</span><span style="color: #444444;">:</span><span> [</span><span style="color: #4C9A91;">64</span><span>]</span><span style="color: #BD976A;">QoiPixel</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    prev_pixel</span><span style="color: #444444;">:</span><span style="color: #BD976A;"> QoiPixel</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BD976A;">    pixel_offset</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> usize</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    len</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> usize</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BD976A;">    data</span><span style="color: #444444;">:</span><span> [</span><span style="color: #CB7676;">*</span><span>]</span><span style="color: #4D9375;">u8</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    offset</span><span style="color: #444444;">:</span><span> [</span><span style="color: #CB7676;">*</span><span>]</span><span style="color: #4D9375;">u8</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BD976A;">    run</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    pad</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u24</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #CB7676;">    fn</span><span style="color: #80A665;"> qoiEncInit</span><span>(</span><span style="color: #BD976A;">self</span><span style="color: #444444;">:</span><span style="color: #CB7676;"> *</span><span style="color: #BD976A;">QoiEnc</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> desc</span><span style="color: #444444;">:</span><span style="color: #BD976A;"> QoiDesc</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> data</span><span style="color: #444444;">:</span><span> [</span><span style="color: #CB7676;">*</span><span>]</span><span style="color: #4D9375;">u8</span><span>) </span><span style="color: #CB7676;">!</span><span style="color: #4D9375;">void</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">        // ... (implementation omitted for brevity)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #758575DD;">    // ... (other methods omitted for brevity, but there are a bunch)</span></span>
+<span class="giallo-l"><span>}</span><span style="color: #444444;">;</span></span></code></pre>
+<p>Now, remember the types of pixels allowed in QOI that we enumerated earlier? The
+<code>QoiEnc</code> struct provides separate methods for encoding each of these, including
+<code>qoiEncRun</code>, <code>qoiEncLuma</code>, <code>qoiEncIndex</code>, <code>qoiEncFullColor</code>, and
+<code>qoiEncDifference</code>.</p>
+<p>Let's take a closer look at the <code>qoiEncRun</code> method, which handles run-length
+encoding:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #CB7676;">fn</span><span style="color: #80A665;"> qoiEncRun</span><span>(</span><span style="color: #BD976A;">self</span><span style="color: #444444;">:</span><span style="color: #CB7676;"> *</span><span style="color: #BD976A;">QoiEnc</span><span>) </span><span style="color: #4D9375;">void</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> tag</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @intFromEnum</span><span>(</span><span style="color: #BD976A;">QoiEnum</span><span style="color: #444444;">.</span><span style="color: #BD976A;">QOI_OP_RUN</span><span>) </span><span style="color: #CB7676;">|</span><span> (</span><span style="color: #BD976A;">self</span><span style="color: #444444;">.</span><span style="color: #BD976A;">run</span><span style="color: #CB7676;"> -</span><span style="color: #4C9A91;"> 1</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    self</span><span style="color: #444444;">.</span><span style="color: #BD976A;">run</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 0</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BD976A;">    self</span><span style="color: #444444;">.</span><span style="color: #BD976A;">offset</span><span>[</span><span style="color: #4C9A91;">0</span><span>] </span><span style="color: #444444;">=</span><span style="color: #BD976A;"> tag</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    self</span><span style="color: #444444;">.</span><span style="color: #BD976A;">offset</span><span style="color: #CB7676;"> +=</span><span style="color: #4C9A91;"> 1</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>This is a <em>"Run pixel"</em> which is the simplest kind of pixel conceptually within
+QOI, in my opinion.</p>
+<p>This method writes a tag byte to the output buffer, indicating a run of
+identical pixels. The tag byte consists of the <code>QOI_OP_RUN</code> opcode combined with
+the run length minus one via a logical or.</p>
+<p>The <code>qoiEncLuma</code> method, on the other hand, handles encoding <em>"Luma Pixels"</em>:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #CB7676;">fn</span><span style="color: #80A665;"> qoiEncLuma</span><span>(</span><span style="color: #BD976A;">self</span><span style="color: #444444;">:</span><span style="color: #CB7676;"> *</span><span style="color: #BD976A;">QoiEnc</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> green_diff</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> i8</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> dr_dg</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> i8</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> db_dg</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> i8</span><span>) </span><span style="color: #4D9375;">void</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> green_diff_biased</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @intCast</span><span>(</span><span style="color: #BD976A;">green_diff</span><span style="color: #CB7676;"> +</span><span style="color: #4C9A91;"> 32</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> dr_dg_biased</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @intCast</span><span>(</span><span style="color: #BD976A;">dr_dg</span><span style="color: #CB7676;"> +</span><span style="color: #4C9A91;"> 8</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> db_dg_biased</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @intCast</span><span>(</span><span style="color: #BD976A;">db_dg</span><span style="color: #CB7676;"> +</span><span style="color: #4C9A91;"> 8</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> tags</span><span style="color: #444444;"> =</span><span> [</span><span style="color: #4C9A91;">2</span><span>]</span><span style="color: #4D9375;">u8</span><span>{ </span><span style="color: #B8A965;">@intFromEnum</span><span>(</span><span style="color: #BD976A;">QoiEnum</span><span style="color: #444444;">.</span><span style="color: #BD976A;">QOI_OP_LUMA</span><span>) </span><span style="color: #CB7676;">|</span><span style="color: #BD976A;"> green_diff_biased</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> dr_dg_biased</span><span style="color: #CB7676;"> &lt;&lt;</span><span style="color: #4C9A91;"> 4</span><span style="color: #CB7676;"> |</span><span style="color: #BD976A;"> db_dg_biased</span><span> }</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    for</span><span> (</span><span style="color: #BD976A;">tags</span><span style="color: #444444;">,</span><span style="color: #4C9A91;"> 0</span><span style="color: #444444;">..</span><span>) </span><span style="color: #CB7676;">|</span><span style="color: #BD976A;">tag</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> i</span><span style="color: #CB7676;">|</span><span style="color: #BD976A;"> self</span><span style="color: #444444;">.</span><span style="color: #BD976A;">offset</span><span>[</span><span style="color: #BD976A;">i</span><span>] </span><span style="color: #444444;">=</span><span style="color: #BD976A;"> tag</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    self</span><span style="color: #444444;">.</span><span style="color: #BD976A;">offset</span><span style="color: #CB7676;"> +=</span><span style="color: #BD976A;"> tags</span><span style="color: #444444;">.</span><span style="color: #BD976A;">len</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>This method calculates the differences between the red, green, and blue channels
+of the current pixel and the previous pixel. It then encodes these differences
+using a luma tag and bias values, as we already explained when we talked about
+QOI.</p>
+<p>Encoding "Diff Pixels" with <code>qoiEncDifference</code> is a similar story:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #CB7676;">    fn</span><span style="color: #80A665;"> qoiEncDifference</span><span>(</span><span style="color: #BD976A;">enc</span><span style="color: #444444;">:</span><span style="color: #CB7676;"> *</span><span style="color: #BD976A;">QoiEnc</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> red_diff</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> i32</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> green_diff</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> i32</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> blue_diff</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> i32</span><span>) </span><span style="color: #4D9375;">void</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        const</span><span style="color: #BD976A;"> green_diff_biased</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @intCast</span><span>(</span><span style="color: #BD976A;">green_diff</span><span style="color: #CB7676;"> +</span><span style="color: #4C9A91;"> 2</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        const</span><span style="color: #BD976A;"> red_diff_biased</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @intCast</span><span>(</span><span style="color: #BD976A;">red_diff</span><span style="color: #CB7676;"> +</span><span style="color: #4C9A91;"> 2</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        const</span><span style="color: #BD976A;"> blue_diff_biased</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @intCast</span><span>(</span><span style="color: #BD976A;">blue_diff</span><span style="color: #CB7676;"> +</span><span style="color: #4C9A91;"> 2</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">        const</span><span style="color: #BD976A;"> tag</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;"> =</span></span>
+<span class="giallo-l"><span style="color: #B8A965;">            @intFromEnum</span><span>(</span><span style="color: #BD976A;">QoiEnum</span><span style="color: #444444;">.</span><span style="color: #BD976A;">QOI_OP_DIFF</span><span>) </span><span style="color: #CB7676;">|</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">            red_diff_biased</span><span style="color: #CB7676;"> &lt;&lt;</span><span style="color: #4C9A91;"> 4</span><span style="color: #CB7676;"> |</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">            green_diff_biased</span><span style="color: #CB7676;"> &lt;&lt;</span><span style="color: #4C9A91;"> 2</span><span style="color: #CB7676;"> |</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">            blue_diff_biased</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BD976A;">        enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">offset</span><span>[</span><span style="color: #4C9A91;">0</span><span>] </span><span style="color: #444444;">=</span><span style="color: #BD976A;"> tag</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BD976A;">        enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">offset</span><span style="color: #CB7676;"> +=</span><span style="color: #4C9A91;"> 1</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>    }</span></span></code></pre>
+<p>The bit manipulations for properly writing to <code>enc.offset</code> felt a bit
+intimidating, and to be honest, they still do &amp; probably always will. Thinking
+about the actual structure of the pixels being written to the file, it begins to
+make a bit more sense thinking about the fact that the pixels are stored in
+order of red's difference, then green's difference, then blue's difference, with
+a tag preceding them; the entire pixel is a single byte, the differences are
+just being ordered <em>within</em> that byte.</p>
+<p>Now, let's look at encoding "RGB Pixels" &amp; "RGBA Pixels" with <code>qoiEncFullColor</code>:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #CB7676;">    fn</span><span style="color: #80A665;"> qoiEncFullColor</span><span>(</span><span style="color: #BD976A;">enc</span><span style="color: #444444;">:</span><span style="color: #CB7676;"> *</span><span style="color: #BD976A;">QoiEnc</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> px</span><span style="color: #444444;">:</span><span style="color: #BD976A;"> QoiPixel</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> channels</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span>) </span><span style="color: #4D9375;">void</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        var</span><span style="color: #BD976A;"> s</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u3</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 0</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        if</span><span> (</span><span style="color: #BD976A;">channels</span><span style="color: #CB7676;"> &gt;</span><span style="color: #4C9A91;"> 3</span><span>) </span><span style="color: #BD976A;">s</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 5</span><span style="color: #4D9375;"> else</span><span style="color: #BD976A;"> s</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 4</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        const</span><span style="color: #BD976A;"> tags</span><span style="color: #444444;">:</span><span> [</span><span style="color: #4C9A91;">5</span><span>]</span><span style="color: #4D9375;">u8</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> if</span><span> (</span><span style="color: #BD976A;">channels</span><span style="color: #CB7676;"> &gt;</span><span style="color: #4C9A91;"> 3</span><span>) </span><span style="color: #444444;">.</span><span>{</span></span>
+<span class="giallo-l"><span style="color: #B8A965;">            @intFromEnum</span><span>(</span><span style="color: #BD976A;">QoiEnum</span><span style="color: #444444;">.</span><span style="color: #BD976A;">QOI_OP_RGBA</span><span>)</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">            px</span><span style="color: #444444;">.</span><span style="color: #BD976A;">vals</span><span style="color: #444444;">.</span><span style="color: #BD976A;">red</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">            px</span><span style="color: #444444;">.</span><span style="color: #BD976A;">vals</span><span style="color: #444444;">.</span><span style="color: #BD976A;">green</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">            px</span><span style="color: #444444;">.</span><span style="color: #BD976A;">vals</span><span style="color: #444444;">.</span><span style="color: #BD976A;">blue</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">            px</span><span style="color: #444444;">.</span><span style="color: #BD976A;">vals</span><span style="color: #444444;">.</span><span style="color: #BD976A;">alpha</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span>        } </span><span style="color: #4D9375;">else</span><span style="color: #444444;"> .</span><span>{</span></span>
+<span class="giallo-l"><span style="color: #B8A965;">            @intFromEnum</span><span>(</span><span style="color: #BD976A;">QoiEnum</span><span style="color: #444444;">.</span><span style="color: #BD976A;">QOI_OP_RGB</span><span>)</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">            px</span><span style="color: #444444;">.</span><span style="color: #BD976A;">vals</span><span style="color: #444444;">.</span><span style="color: #BD976A;">red</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">            px</span><span style="color: #444444;">.</span><span style="color: #BD976A;">vals</span><span style="color: #444444;">.</span><span style="color: #BD976A;">green</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">            px</span><span style="color: #444444;">.</span><span style="color: #BD976A;">vals</span><span style="color: #444444;">.</span><span style="color: #BD976A;">blue</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">            undefined</span><span style="color: #444444;">,</span></span>
+<span class="giallo-l"><span>        }</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">        for</span><span> (</span><span style="color: #BD976A;">tags</span><span>[</span><span style="color: #4C9A91;">0</span><span style="color: #444444;">..</span><span style="color: #BD976A;">s</span><span>]</span><span style="color: #444444;">,</span><span style="color: #4C9A91;"> 0</span><span style="color: #444444;">..</span><span style="color: #BD976A;">s</span><span>) </span><span style="color: #CB7676;">|</span><span style="color: #BD976A;">tag</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> i</span><span style="color: #CB7676;">|</span><span style="color: #BD976A;"> enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">offset</span><span>[</span><span style="color: #BD976A;">i</span><span>] </span><span style="color: #444444;">=</span><span style="color: #BD976A;"> tag</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">offset</span><span style="color: #CB7676;"> +=</span><span style="color: #BD976A;"> s</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>    }</span></span></code></pre>
+<p>Here, we have some trademark "Zigginess". Let's walk through it:</p>
+<ul>
+<li>The method takes a pointer to a QoiEnc, which is essentially "self"</li>
+<li>A QoiPixel, and</li>
+<li>the number of channels. Within the method:</li>
+<li>We declare a variable <code>s</code> which is a mere 3 bits</li>
+<li>We're making <code>tags</code> an array of 5 unsigned 8-bit integers, and assigning
+different values to the array depending on the number of channels.</li>
+</ul>
+<p>Let's stop here for a moment. As you can see, these <code>if</code> expressions are being
+used more like ternary expressions would be in C. The assignment to <code>tags</code> is
+being done via an <em>anonymous list literal</em>. These confused me greatly when first
+learning Zig, but it makes a bit more sense looking at a more concise example:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #758575DD;">// Initialize an array with array literal syntax. Compiler infers size</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> arr_a</span><span style="color: #444444;"> =</span><span> [</span><span style="color: #BD976A;">_</span><span>]</span><span style="color: #4D9375;">i6</span><span>{</span><span style="color: #4C9A91;">6</span><span style="color: #444444;">,</span><span style="color: #4C9A91;"> 7</span><span style="color: #444444;">,</span><span style="color: #4C9A91;"> 8</span><span>}</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">// Initialize an array with an anonymous list literal. Compiler cannot</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">// infer size, as it isn&#39;t aware of the anonymous list literal</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> arr_b</span><span style="color: #444444;">:</span><span> [</span><span style="color: #4C9A91;">3</span><span>]</span><span style="color: #4D9375;">i6</span><span style="color: #444444;"> = .</span><span>{</span><span style="color: #4C9A91;">6</span><span style="color: #444444;">,</span><span style="color: #4C9A91;"> 7</span><span style="color: #444444;">,</span><span style="color: #4C9A91;"> 8</span><span>}</span><span style="color: #444444;">;</span></span></code></pre>
+<p>Now we can observe the <code>for</code> loop at the end of the function block. I like the
+way Zig handles for loops, essentially leaving traditional C-style <code>i++</code>
+iteration for <code>while</code> loops. What we're essentially doing in this loop is
+slicing <code>tags</code> from index 0 to the index before <code>s</code>.</p>
+<blockquote>
+<p>A slice is a pointer and a length. The difference between an array and a slice
+is that the array's length is part of the type and known at compile-time,
+whereas the slice's length is known at runtime. Both can be accessed with the
+<code>len</code> field. (<a rel="external" href="https://ziglang.org/documentation/master/#Slices">2</a>)</p>
+</blockquote>
+<p>We're also keeping track of 0 through the integer just preceding <code>s</code> with
+<code>0..s</code>. The values are captured with <code>|tag, i|</code>, where we use <code>i</code> to assign
+values with <code>tag</code> to elements in <code>enc.offset</code>. Finally, we add <code>s</code> to
+<code>enc.offset</code>, as <code>s</code> represents the number of bytes we need, and <code>enc.offset</code> is
+a u8 multi-pointer.</p>
+<p>This felt pretty cool, to have <code>for</code> loops and <code>if</code> statements so gracefully
+doing my bidding based on little <code>s</code>.</p>
+<p>How about we take a look at encoding "Hashed Pixels" next, now that we're
+getting the hang of things?</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #CB7676;">fn</span><span style="color: #80A665;"> qoiEncIndex</span><span>(</span><span style="color: #BD976A;">enc</span><span style="color: #444444;">:</span><span style="color: #CB7676;"> *</span><span style="color: #BD976A;">QoiEnc</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> index_pos</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span>) </span><span style="color: #4D9375;">void</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> tag</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @intFromEnum</span><span>(</span><span style="color: #BD976A;">QoiEnum</span><span style="color: #444444;">.</span><span style="color: #BD976A;">QOI_OP_INDEX</span><span>) </span><span style="color: #CB7676;">|</span><span style="color: #BD976A;"> index_pos</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">offset</span><span>[</span><span style="color: #4C9A91;">0</span><span>] </span><span style="color: #444444;">=</span><span style="color: #BD976A;"> tag</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">offset</span><span style="color: #CB7676;"> +=</span><span style="color: #4C9A91;"> 1</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>This is pretty straightforward. We calculate the hash itself outside of the
+function with
+<code>const index_pos: u6 = @truncate(cur_pixel.vals.red *% 3 +% cur_pixel.vals.green *% 5 +% cur_pixel.vals.blue *% 7 +% cur_pixel.vals.alpha *% 11);</code>.
+The <code>*%</code> &amp; <code>+%</code> just mean <em>wrapping addition/multiplication</em>, which we
+understand from the QOI pixel descriptions. We need our numbers to wrap around.
+The built-in <code>@truncate</code> helps too, as it ensures we don't overflow a <code>u6</code>; it
+truncates bits from an integer type resulting in a smaller integer type, so it
+is taking the low 6 bits of our hash result because there are only 64 entries in
+our index table. The <code>enc.offset</code> is incremented by 1, because the pixel is a
+single byte.</p>
+<p>That's all the pixels!</p>
+<p>Now, the <code>qoiEncodeChunk</code> function is where the magic happens. It iterates over
+the input pixel data, compares each pixel with the previous one, and chooses the
+optimal encoding operation based on the differences between the pixels. The
+encoded data is then written to the output buffer using the respective encoding
+methods:</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #CB7676;">fn</span><span style="color: #80A665;"> qoiEncodeChunk</span><span>(</span><span style="color: #BD976A;">desc</span><span style="color: #444444;">:</span><span style="color: #CB7676;"> *</span><span style="color: #BD976A;">QoiDesc</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> enc</span><span style="color: #444444;">:</span><span style="color: #CB7676;"> *</span><span style="color: #BD976A;">QoiEnc</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> qoi_pixel_bytes</span><span style="color: #444444;">:</span><span> [</span><span style="color: #CB7676;">*</span><span>]</span><span style="color: #4D9375;">u8</span><span>) </span><span style="color: #4D9375;">void</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    var</span><span style="color: #BD976A;"> cur_pixel</span><span style="color: #444444;">:</span><span style="color: #BD976A;"> QoiPixel</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> undefined</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #758575DD;">    // ... (omitted for brevity. this is just deciding &quot;alpha or no alpha?&quot;</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">    // and writing relevant data to the current pixel.)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> index_pos</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u6</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @truncate</span><span>(</span><span style="color: #BD976A;">cur_pixel</span><span style="color: #444444;">.</span><span style="color: #BD976A;">vals</span><span style="color: #444444;">.</span><span style="color: #BD976A;">red</span><span style="color: #CB7676;"> *%</span><span style="color: #4C9A91;"> 3</span><span style="color: #CB7676;"> +%</span><span style="color: #BD976A;"> cur_pixel</span><span style="color: #444444;">.</span><span style="color: #BD976A;">vals</span><span style="color: #444444;">.</span><span style="color: #BD976A;">green</span><span style="color: #CB7676;"> *%</span><span style="color: #4C9A91;"> 5</span><span style="color: #CB7676;"> +%</span><span style="color: #BD976A;"> cur_pixel</span><span style="color: #444444;">.</span><span style="color: #BD976A;">vals</span><span style="color: #444444;">.</span><span style="color: #BD976A;">blue</span><span style="color: #CB7676;"> *%</span><span style="color: #4C9A91;"> 7</span><span style="color: #CB7676;"> +%</span><span style="color: #BD976A;"> cur_pixel</span><span style="color: #444444;">.</span><span style="color: #BD976A;">vals</span><span style="color: #444444;">.</span><span style="color: #BD976A;">alpha</span><span style="color: #CB7676;"> *%</span><span style="color: #4C9A91;"> 11</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    if</span><span> (</span><span style="color: #80A665;">qoiComparePixel</span><span>(</span><span style="color: #BD976A;">cur_pixel</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">prev_pixel</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> desc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">channels</span><span>)) {</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">        // Handle &quot;run pixel&quot; encoding</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">        // ...</span></span>
+<span class="giallo-l"><span>    } </span><span style="color: #4D9375;">else</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        if</span><span> (</span><span style="color: #BD976A;">enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">run</span><span style="color: #CB7676;"> &gt;</span><span style="color: #4C9A91;"> 0</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">            enc</span><span style="color: #444444;">.</span><span style="color: #80A665;">qoiEncRun</span><span>()</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        if</span><span> (</span><span style="color: #80A665;">qoiComparePixel</span><span>(</span><span style="color: #BD976A;">enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">buffer</span><span>[</span><span style="color: #BD976A;">index_pos</span><span>]</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> cur_pixel</span><span style="color: #444444;">,</span><span style="color: #4C9A91;"> 4</span><span>)) {</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">            // Handle &quot;hash pixel&quot; encoding</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">            // ...</span></span>
+<span class="giallo-l"><span>        } </span><span style="color: #4D9375;">else</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">            enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">buffer</span><span>[</span><span style="color: #BD976A;">index_pos</span><span>] </span><span style="color: #444444;">=</span><span style="color: #BD976A;"> cur_pixel</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #758575DD;">            // Handle various encoding operations based on pixel differences</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">            // ...</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BD976A;">    enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">prev_pixel</span><span style="color: #444444;"> =</span><span style="color: #BD976A;"> cur_pixel</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">pixel_offset</span><span style="color: #CB7676;"> +=</span><span style="color: #4C9A91;"> 1</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #758575DD;">    // Handle padding at the end of the image once it is time to do so</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">    // ...</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>You can see the <code>index_pos</code> hash calculation in there, where it happens, and
+what triggers it. Hopefully, everything else is clear, too. Alongside the
+others, this function demonstrates Zig's ability to work with low-level data
+structures and perform bit-level operations.</p>
+<h2 id="main-function">Main Function</h2>
+<p>Now that we understand everything we can do to encode a QOI image, let's look at
+the <code>main</code> function.</p>
+<p>This <code>main</code> function serves as a great example of Zig's clean and readable
+syntax as well as QOI's simplicity. It parses command-line arguments, handles
+file I/O, and orchestrates the encoding process while staying concise. Error
+handling is easy in Zig, with the error union <code>!void</code> ensuring any errors are
+dealt with as they are returned. I'd like to expand on error unions more, but
+I'll save that for another article.</p>
+<pre class="giallo" style="color: #DBD7CACC; background-color: #000000;" ><code data-lang="zig"><span class="giallo-l"><span style="color: #4D9375;">pub</span><span style="color: #CB7676;"> fn</span><span style="color: #80A665;"> main</span><span>() </span><span style="color: #CB7676;">!</span><span style="color: #4D9375;">void</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #758575DD;">    // Get allocator</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    var</span><span style="color: #BD976A;"> gpa</span><span style="color: #444444;"> =</span><span style="color: #BD976A;"> std</span><span style="color: #444444;">.</span><span style="color: #BD976A;">heap</span><span style="color: #444444;">.</span><span style="color: #5DA994;">GeneralPurposeAllocator</span><span>(</span><span style="color: #444444;">.</span><span>{}){}</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> allocator</span><span style="color: #444444;"> =</span><span style="color: #BD976A;"> gpa</span><span style="color: #444444;">.</span><span style="color: #80A665;">allocator</span><span>()</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    defer</span><span style="color: #BD976A;"> _</span><span style="color: #444444;"> =</span><span style="color: #BD976A;"> gpa</span><span style="color: #444444;">.</span><span style="color: #80A665;">deinit</span><span>()</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #758575DD;">    // Parse args into string array (error union needs &#39;try&#39;)</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> args</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> try</span><span style="color: #BD976A;"> std</span><span style="color: #444444;">.</span><span style="color: #BD976A;">process</span><span style="color: #444444;">.</span><span style="color: #80A665;">argsAlloc</span><span>(</span><span style="color: #BD976A;">allocator</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    defer</span><span style="color: #BD976A;"> std</span><span style="color: #444444;">.</span><span style="color: #BD976A;">process</span><span style="color: #444444;">.</span><span style="color: #80A665;">argsFree</span><span>(</span><span style="color: #BD976A;">allocator</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> args</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    if</span><span> (</span><span style="color: #BD976A;">std</span><span style="color: #444444;">.</span><span style="color: #BD976A;">mem</span><span style="color: #444444;">.</span><span style="color: #80A665;">eql</span><span>(</span><span style="color: #4D9375;">u8</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> args</span><span>[</span><span style="color: #4C9A91;">1</span><span>]</span><span style="color: #444444;">,</span><span style="color: #C98A7D;"> &quot;-h&quot;</span><span>) </span><span style="color: #4D9375;">or</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        std</span><span style="color: #444444;">.</span><span style="color: #BD976A;">mem</span><span style="color: #444444;">.</span><span style="color: #80A665;">eql</span><span>(</span><span style="color: #4D9375;">u8</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> args</span><span>[</span><span style="color: #4C9A91;">1</span><span>]</span><span style="color: #444444;">,</span><span style="color: #C98A7D;"> &quot;--help&quot;</span><span>) </span><span style="color: #4D9375;">or</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        args</span><span style="color: #444444;">.</span><span style="color: #BD976A;">len</span><span style="color: #CB7676;"> &lt;</span><span style="color: #4C9A91;"> 4</span><span style="color: #4D9375;"> or</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        args</span><span style="color: #444444;">.</span><span style="color: #BD976A;">len</span><span style="color: #CB7676;"> &gt;</span><span style="color: #4C9A91;"> 4</span><span style="color: #4D9375;"> or</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        args</span><span>[</span><span style="color: #4C9A91;">1</span><span>]</span><span style="color: #444444;">.</span><span style="color: #BD976A;">len</span><span style="color: #CB7676;"> &lt;</span><span style="color: #4C9A91;"> 1</span><span>)</span></span>
+<span class="giallo-l"><span>    {</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        _</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> try</span><span style="color: #80A665;"> printHelp</span><span>()</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        return</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    var</span><span style="color: #BD976A;"> width</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u32</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> undefined</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    var</span><span style="color: #BD976A;"> height</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u32</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> undefined</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    var</span><span style="color: #BD976A;"> channels</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> undefined</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> colorspace</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> u8</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> try</span><span style="color: #80A665;"> parseInt</span><span>(</span><span style="color: #4D9375;">u8</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> args</span><span>[</span><span style="color: #4C9A91;">3</span><span>]</span><span style="color: #444444;">,</span><span style="color: #4C9A91;"> 10</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #80A665;">    print</span><span>(</span><span style="color: #C98A7D;">&quot;Opening {s} ... &quot;</span><span style="color: #444444;">, .</span><span>{</span><span style="color: #BD976A;">args</span><span>[</span><span style="color: #4C9A91;">1</span><span>]})</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> file</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> try</span><span style="color: #BD976A;"> std</span><span style="color: #444444;">.</span><span style="color: #BD976A;">fs</span><span style="color: #444444;">.</span><span style="color: #80A665;">cwd</span><span>()</span><span style="color: #444444;">.</span><span style="color: #80A665;">openFile</span><span>(</span><span style="color: #BD976A;">args</span><span>[</span><span style="color: #4C9A91;">1</span><span>]</span><span style="color: #444444;">, .</span><span>{ </span><span style="color: #444444;">.</span><span style="color: #BD976A;">mode</span><span style="color: #444444;"> = .</span><span style="color: #BD976A;">read_only</span><span> })</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    defer</span><span style="color: #BD976A;"> file</span><span style="color: #444444;">.</span><span style="color: #80A665;">close</span><span>()</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> bytes_read</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> try</span><span style="color: #BD976A;"> file</span><span style="color: #444444;">.</span><span style="color: #80A665;">readToEndAlloc</span><span>(</span><span style="color: #BD976A;">allocator</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> std</span><span style="color: #444444;">.</span><span style="color: #BD976A;">math</span><span style="color: #444444;">.</span><span style="color: #80A665;">maxInt</span><span>(</span><span style="color: #4D9375;">usize</span><span>))</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    defer</span><span style="color: #BD976A;"> allocator</span><span style="color: #444444;">.</span><span style="color: #80A665;">free</span><span>(</span><span style="color: #BD976A;">bytes_read</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    var</span><span style="color: #BD976A;"> offset</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> usize</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 0</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    if</span><span> (</span><span style="color: #BD976A;">std</span><span style="color: #444444;">.</span><span style="color: #BD976A;">mem</span><span style="color: #444444;">.</span><span style="color: #80A665;">eql</span><span>(</span><span style="color: #4D9375;">u8</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> bytes_read</span><span>[</span><span style="color: #4C9A91;">0</span><span style="color: #444444;">..</span><span style="color: #4C9A91;">2</span><span>]</span><span style="color: #444444;">,</span><span style="color: #C98A7D;"> &quot;P7&quot;</span><span>)) {</span></span>
+<span class="giallo-l"><span style="color: #80A665;">        print</span><span>(</span><span style="color: #C98A7D;">&quot;file is a PAM</span><span style="color: #C99076;">\n</span><span style="color: #C98A7D;">&quot;</span><span style="color: #444444;">, .</span><span>{})</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        offset</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> try</span><span style="color: #80A665;"> parsePamHeader</span><span>(</span><span style="color: #BD976A;">bytes_read</span><span>[</span><span style="color: #4C9A91;">0</span><span style="color: #444444;">..</span><span style="color: #4C9A91;">72</span><span>]</span><span style="color: #444444;">,</span><span style="color: #CB7676;"> &amp;</span><span style="color: #BD976A;">width</span><span style="color: #444444;">,</span><span style="color: #CB7676;"> &amp;</span><span style="color: #BD976A;">height</span><span style="color: #444444;">,</span><span style="color: #CB7676;"> &amp;</span><span style="color: #BD976A;">channels</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>    } </span><span style="color: #4D9375;">else</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #80A665;">        print</span><span>(</span><span style="color: #C98A7D;">&quot;</span><span style="color: #C99076;">\n\x1b</span><span style="color: #C98A7D;">[31mInvalid Input: Input file does not appear to be a compatible PAM.</span><span style="color: #C99076;">\x1b</span><span style="color: #C98A7D;">[0m</span><span style="color: #C99076;">\n</span><span style="color: #C98A7D;">&quot;</span><span style="color: #444444;">, .</span><span>{})</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #80A665;">        print</span><span>(</span><span style="color: #C98A7D;">&quot;If your PAM input contains comments in the header, please strip them.</span><span style="color: #C99076;">\n</span><span style="color: #C98A7D;">&quot;</span><span style="color: #444444;">, .</span><span>{})</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        return error</span><span style="color: #444444;">.</span><span style="color: #BD976A;">InvalidInput</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> image_size</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> usize</span><span style="color: #444444;"> =</span><span style="color: #BD976A;"> width</span><span style="color: #CB7676;"> *</span><span style="color: #BD976A;"> height</span><span style="color: #CB7676;"> *</span><span style="color: #BD976A;"> channels</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    if</span><span> (</span><span style="color: #BD976A;">image_size</span><span style="color: #CB7676;"> &gt;</span><span style="color: #BD976A;"> bytes_read</span><span style="color: #444444;">.</span><span style="color: #BD976A;">len</span><span style="color: #CB7676;"> -</span><span style="color: #BD976A;"> offset</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #80A665;">        print</span><span>(</span><span style="color: #C98A7D;">&quot;</span><span style="color: #C99076;">\x1b</span><span style="color: #C98A7D;">[31mInvalid Input: Image size is larger than the file size.</span><span style="color: #C99076;">\x1b</span><span style="color: #C98A7D;">[0m</span><span style="color: #C99076;">\n</span><span style="color: #C98A7D;">&quot;</span><span style="color: #444444;">, .</span><span>{})</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        return error</span><span style="color: #444444;">.</span><span style="color: #BD976A;">InvalidInput</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    var</span><span style="color: #BD976A;"> desc</span><span style="color: #444444;"> =</span><span style="color: #BD976A;"> QoiDesc</span><span style="color: #444444;">.</span><span style="color: #80A665;">qoiSetEverything</span><span>(</span><span style="color: #BD976A;">width</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> height</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> channels</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> colorspace</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> qoi_file_size</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @as</span><span>(</span><span style="color: #4D9375;">usize</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> desc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">width</span><span>) </span><span style="color: #CB7676;">*</span><span style="color: #B8A965;"> @as</span><span>(</span><span style="color: #4D9375;">usize</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> desc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">height</span><span>) </span><span style="color: #CB7676;">*</span><span> (</span><span style="color: #B8A965;">@as</span><span>(</span><span style="color: #4D9375;">usize</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> desc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">channels</span><span>) </span><span style="color: #CB7676;">+</span><span style="color: #4C9A91;"> 1</span><span>) </span><span style="color: #CB7676;">+</span><span style="color: #4C9A91;"> 14</span><span style="color: #CB7676;"> +</span><span style="color: #4C9A91;"> 8</span><span style="color: #CB7676;"> +</span><span style="color: #B8A965;"> @sizeOf</span><span>(</span><span style="color: #4D9375;">usize</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    var</span><span style="color: #BD976A;"> qoi_file</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> try</span><span style="color: #BD976A;"> allocator</span><span style="color: #444444;">.</span><span style="color: #80A665;">alloc</span><span>(</span><span style="color: #4D9375;">u8</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> qoi_file_size</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    defer</span><span style="color: #BD976A;"> allocator</span><span style="color: #444444;">.</span><span style="color: #80A665;">free</span><span>(</span><span style="color: #BD976A;">qoi_file</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #80A665;">    print</span><span>(</span><span style="color: #C98A7D;">&quot;Writing {s} ... &quot;</span><span style="color: #444444;">, .</span><span>{</span><span style="color: #BD976A;">args</span><span>[</span><span style="color: #4C9A91;">2</span><span>]})</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BD976A;">    desc</span><span style="color: #444444;">.</span><span style="color: #80A665;">writeQoiHeader</span><span>(</span><span style="color: #BD976A;">qoi_file</span><span>[</span><span style="color: #4C9A91;">0</span><span style="color: #444444;">..</span><span style="color: #4C9A91;">14</span><span>])</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    var</span><span style="color: #BD976A;"> pixel_seek</span><span style="color: #444444;">:</span><span> [</span><span style="color: #CB7676;">*</span><span>]</span><span style="color: #4D9375;">u8</span><span style="color: #444444;"> =</span><span style="color: #BD976A;"> bytes_read</span><span>[</span><span style="color: #BD976A;">offset</span><span style="color: #444444;">..</span><span>]</span><span style="color: #444444;">.</span><span style="color: #BD976A;">ptr</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    var</span><span style="color: #BD976A;"> enc</span><span style="color: #444444;">:</span><span style="color: #BD976A;"> QoiEnc</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> undefined</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    try</span><span style="color: #BD976A;"> enc</span><span style="color: #444444;">.</span><span style="color: #80A665;">qoiEncInit</span><span>(</span><span style="color: #BD976A;">desc</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> qoi_file</span><span style="color: #444444;">.</span><span style="color: #BD976A;">ptr</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    while</span><span> (</span><span style="color: #CB7676;">!</span><span>(</span><span style="color: #BD976A;">enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">pixel_offset</span><span style="color: #CB7676;"> &gt;=</span><span style="color: #BD976A;"> enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">len</span><span>)) {</span></span>
+<span class="giallo-l"><span style="color: #80A665;">        qoiEncodeChunk</span><span>(</span><span style="color: #CB7676;">&amp;</span><span style="color: #BD976A;">desc</span><span style="color: #444444;">,</span><span style="color: #CB7676;"> &amp;</span><span style="color: #BD976A;">enc</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> pixel_seek</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">        pixel_seek</span><span style="color: #CB7676;"> +=</span><span style="color: #BD976A;"> desc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">channels</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> used_len</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @intFromPtr</span><span>(</span><span style="color: #BD976A;">enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">offset</span><span>) </span><span style="color: #CB7676;">-</span><span style="color: #B8A965;"> @intFromPtr</span><span>(</span><span style="color: #BD976A;">enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">data</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #4D9375;">    const</span><span style="color: #BD976A;"> outfile</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> try</span><span style="color: #BD976A;"> std</span><span style="color: #444444;">.</span><span style="color: #BD976A;">fs</span><span style="color: #444444;">.</span><span style="color: #80A665;">cwd</span><span>()</span><span style="color: #444444;">.</span><span style="color: #80A665;">createFile</span><span>(</span><span style="color: #BD976A;">args</span><span>[</span><span style="color: #4C9A91;">2</span><span>]</span><span style="color: #444444;">, .</span><span>{ </span><span style="color: #444444;">.</span><span style="color: #BD976A;">truncate</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> true</span><span> })</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    defer</span><span style="color: #BD976A;"> outfile</span><span style="color: #444444;">.</span><span style="color: #80A665;">close</span><span>()</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #BD976A;">    _</span><span style="color: #444444;"> =</span><span style="color: #4D9375;"> try</span><span style="color: #BD976A;"> outfile</span><span style="color: #444444;">.</span><span style="color: #80A665;">writeAll</span><span>(</span><span style="color: #BD976A;">enc</span><span style="color: #444444;">.</span><span style="color: #BD976A;">data</span><span>[</span><span style="color: #4C9A91;">0</span><span style="color: #444444;">..</span><span style="color: #BD976A;">used_len</span><span>])</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #80A665;">    print</span><span>(</span><span style="color: #C98A7D;">&quot;</span><span style="color: #C99076;">\x1b</span><span style="color: #C98A7D;">[32mSuccess!</span><span style="color: #C99076;">\x1b</span><span style="color: #C98A7D;">[0m</span><span style="color: #C99076;">\n\t</span><span style="color: #C98A7D;">Original:</span><span style="color: #C99076;">\t</span><span style="color: #C98A7D;">{d} bytes</span><span style="color: #C99076;">\n\t</span><span style="color: #C98A7D;">Compressed:</span><span style="color: #C99076;">\t</span><span style="color: #C98A7D;">{d} bytes &quot;</span><span style="color: #444444;">, .</span><span>{ </span><span style="color: #BD976A;">image_size</span><span style="color: #CB7676;"> +</span><span style="color: #BD976A;"> offset</span><span style="color: #444444;">,</span><span style="color: #BD976A;"> used_len</span><span> })</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">    if</span><span> ((</span><span style="color: #BD976A;">image_size</span><span style="color: #CB7676;"> +</span><span style="color: #BD976A;"> offset</span><span>) </span><span style="color: #CB7676;">&gt;</span><span style="color: #BD976A;"> used_len</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        const</span><span style="color: #BD976A;"> used_len_flt</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> f64</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @floatFromInt</span><span>(</span><span style="color: #BD976A;">used_len</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        const</span><span style="color: #BD976A;"> image_size_flt</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> f64</span><span style="color: #444444;"> =</span><span style="color: #B8A965;"> @floatFromInt</span><span>(</span><span style="color: #BD976A;">image_size</span><span style="color: #CB7676;"> +</span><span style="color: #BD976A;"> offset</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #4D9375;">        const</span><span style="color: #BD976A;"> percent_dec</span><span style="color: #444444;">:</span><span style="color: #4D9375;"> f64</span><span style="color: #444444;"> =</span><span style="color: #4C9A91;"> 100.0</span><span style="color: #CB7676;"> -</span><span> ((</span><span style="color: #BD976A;">used_len_flt</span><span style="color: #CB7676;"> /</span><span style="color: #BD976A;"> image_size_flt</span><span>) </span><span style="color: #CB7676;">*</span><span style="color: #4C9A91;"> 100.0</span><span>)</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span style="color: #80A665;">        print</span><span>(</span><span style="color: #C98A7D;">&quot;(</span><span style="color: #C99076;">\x1b</span><span style="color: #C98A7D;">[33m{d:.2}%</span><span style="color: #C99076;">\x1b</span><span style="color: #C98A7D;">[0m smaller)</span><span style="color: #C99076;">\n</span><span style="color: #C98A7D;">&quot;</span><span style="color: #444444;">, .</span><span>{</span><span style="color: #BD976A;">percent_dec</span><span>})</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>    } </span><span style="color: #4D9375;">else</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #80A665;">        print</span><span>(</span><span style="color: #C98A7D;">&quot;</span><span style="color: #C99076;">\n</span><span style="color: #C98A7D;">&quot;</span><span style="color: #444444;">, .</span><span>{})</span><span style="color: #444444;">;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>That's it, the entire <code>main</code> function. It could probably be made even more
+concise with some code golfing, but for now, I'm happy with how readable it is
+even without comments.</p>
+<p>Coming from any other low-level language background, I think this function is
+relatively easy to parse. This is a big argument for Zig, in my opinion -
+transitioning C projects is not a massive burden if you have interoperability as
+well as a codebase that feels familiar to long-time C developers. Even as a
+relatively inexperienced C developer, Zig was trivial to pick up.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>Exploring QOI encoding in Zig has been an incredibly rewarding ordeal. Not only
+did this experience allow me to dive into the intricacies of simple lossless
+image compression, but it also showcased to me the power and versatility of Zig.</p>
+<p>Full disclosure, I may have gotten some details incorrect here, so corrections
+may be imminent. I'll add a note to the very top of this page if I make any
+larger corrections to the article.</p>
+<p>If you're a programmer seeking a modern systems programming language, I highly
+recommend giving Zig a try. If you have any questions, comments, or concerns,
+feel free to reach out to me via my socials on this site's homepage. Thanks for
+reading!</p>
+<p><em>Thank you to Cancername for their help with the QOI encoding implementation!</em></p>
+<p>Freestanding QOI Encoder in Zig:
+<a rel="external" href="https://github.com/gianni-rosato/qoi-enc-zig">GitHub Link</a> (no code comments
+yet, coming soon).</p>
+
+  </div>
+</article>
+
+      </div>
+      <footer class="foot" aria-label="Site footer">
+        &copy; 2026 Gianni Rosato. All Rights Reserved. | <a href="https://giannirosato.com/privacy/" aria-label="Read the privacy policy">Privacy Policy</a>
+      </footer>
+    </main>
+  </body>
+</html>
