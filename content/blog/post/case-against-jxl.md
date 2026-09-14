@@ -41,7 +41,7 @@ claim any political affiliation relative to the codec's symbolism in free
 software. The spirit of this post is educational; I want to offer an empirical
 look at the current state of image compression and the Web platform in 2026.
 Some inspiration is drawn from
-[RISC-V: They Should Have Known Better](https://dmitry.gr/?r=06.%20Thoughtsandproj=12.%20RV)
+[RISC-V: They Should Have Known Better](https://dmitry.gr/?r=06.%20Thoughts&proj=12.%20RV)
 by Dmitry Grinberg.
 
 ## The Web
