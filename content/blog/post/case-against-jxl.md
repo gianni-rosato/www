@@ -99,9 +99,10 @@ relative to its perceptual strength, but I don't see sufficient evidence that
 this is to the degree that graphs like the ones I shared could be secretly
 completely reversed. CVVDP and SSIMULACRA2 are very strong perceptual metrics,
 and definitely tell us _something_ when the differences are this great. For
-AVIF, libaom's perceptually optimized tune is only a couple of points lower than
-its perceptual-metric-optimized tune. Plus, the JPEG XL reference encoder has
-historically suffered from [percep](https://github.com/libjxl/libjxl/issues/414)
+AVIF, libaom's perceptually optimized tune (tune IQ) is only a couple of points
+lower than its perceptual-metric-optimized tune (tune SSIMULACRA2). Plus, the
+JPEG XL reference encoder has historically suffered from
+[percep](https://github.com/libjxl/libjxl/issues/414)
 [tual](https://github.com/libjxl/libjxl/issues/3881)
 [issues](https://github.com/libjxl/libjxl/issues/3616) that remain largely
 unresolved.
@@ -254,12 +255,13 @@ XL's one real advantage has disappeared.
 ![Full Fidelity Range](/static/img/jxl_subset1.svg)
 
 JPEG XL came from Cloudinary and Google, but I think the codec is discussed in a
-way that doesn't make this clear. Because of the politics around Google's
-browser market dominance, AV1 coming from Google, and the controversy around
-Google's WebP, it is my opinion that most of the argument for JPEG XL comes from
-wanting a Web with more developer choice as opposed to wanting a technologically
-superior image codec. I understand this, and I think JPEG XL can still thrive
-outside the Web in places AVIF never could. In the same article:
+way that doesn't make this clear. Also worth mentioning both JPEG XL and AVIF
+are royalty-free. Because of the politics around Google's browser market
+dominance, AV1 coming from Google, and the controversy around Google's WebP, it
+is my opinion that most of the argument for JPEG XL comes from wanting a Web
+with more developer choice as opposed to wanting a technologically superior
+image codec. I understand this, and I think JPEG XL can still thrive outside the
+Web in places AVIF never could. In the same article:
 
 > My current optimistic hope is that JXL takes off outside the web among
 > professionals working with tools like the Adobe suite or alternatives, and
