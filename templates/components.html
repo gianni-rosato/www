@@ -22,6 +22,25 @@
 </div>
 {% endcomponent inline_btn %}
 
+{% component metric_switch(labels, srcs, alts="") %}
+{% set label_list = labels | split(pat=",") %}
+{% set src_list = srcs | split(pat=",") %}
+{% set alt_list = alts | split(pat=",") %}
+<div class="metric-switch" data-metric-switch role="group" aria-label="Select a metric">
+<div class="metric-switch-images">
+{% for src in src_list -%}
+{%- set meta = get_image_metadata(path=src) -%}
+<img src="{{ get_url(path=src) }}" width="{{ meta.width }}" height="{{ meta.height }}" alt="{% if alts != '' %}{{ alt_list[loop.index0] }}{% else %}{{ label_list[loop.index0] }}{% endif %}" class="metric-switch-img{% if loop.first %} is-active{% endif %}" data-metric-index="{{ loop.index0 }}" loading="lazy" decoding="sync" />
+{%- endfor %}
+</div>
+<div class="metric-switch-buttons">
+{% for label in label_list -%}
+<button type="button" class="pill-btn metric-switch-btn{% if loop.first %} is-active{% endif %}" data-metric-index="{{ loop.index0 }}" aria-pressed="{% if loop.first %}true{% else %}false{% endif %}">{{ label }}</button>
+{%- endfor %}
+</div>
+</div>
+{% endcomponent metric_switch %}
+
 {% component gallery_img(src, fb, type="jxl", alt="") %}
 {% if alt != "" %}
 {% set image_alt = alt %}

@@ -17,7 +17,7 @@ Nobody really knows which hardware accelerated AV1 encoder is better right now.
 There are other resources available, but they don't use good metrics. Everyone's
 favorite bad, obsolete, easily tricked metric is VMAF, which was good for a time
 but simply isn't good anymore. You can check out
-[this Twitter thread](https://nitter.poast.org/jonsneyers/status/1573371624132419585)
+[this Twitter thread](https://xcancel.com/jonsneyers/status/1573371624132419585)
 to see what I'm talking about; these aren't edge cases either. You can produce a
 "better quality" video according to VMAF using Contrast Adaptive Sharpening
 filters which inherently do not improve video fidelity in any way.

@@ -128,6 +128,51 @@
   color: var(--offwhite);
 }
 
+.metric-switch {
+  margin: 1.5rem 0;
+}
+
+.metric-switch-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.metric-switch-btn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.metric-switch-btn.is-active {
+  background-color: var(--offwhite);
+  color: var(--black);
+}
+
+.metric-switch-btn:focus-visible {
+  outline: 2px solid var(--offwhite);
+  outline-offset: 2px;
+}
+
+.metric-switch-img {
+  margin: 0 auto;
+}
+
+.metric-switch.is-enhanced .metric-switch-img {
+  display: none;
+}
+
+.metric-switch.is-enhanced .metric-switch-img.is-active {
+  display: block;
+}
+
+.metric-switch:not(.is-enhanced) .metric-switch-buttons {
+  display: none;
+}
+
 @media (min-width: 768px) {
   .blog-posts {
     gap: 2.5rem;
